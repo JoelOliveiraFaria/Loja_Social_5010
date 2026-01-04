@@ -10,18 +10,19 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
-
 data class LoginState(
-    var email : String? = null,
-    var password : String? = null,
-    var error : String? = null,
-    var isLoading : Boolean = false
+    val email: String? = null,
+    val password: String? = null,
+    val error: String? = null,
+    val isLoading: Boolean = false,
+    val loginSuccess: Boolean = false
 )
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    val loginRepository: LoginRepository
+    private val loginRepository: LoginRepository
 ) : ViewModel() {
+
     var uiState = mutableStateOf(LoginState())
         private set
 
@@ -33,10 +34,15 @@ class LoginViewModel @Inject constructor(
         uiState.value = uiState.value.copy(password = password)
     }
 
-    fun login(onLoginSucess: () -> Unit){
-        uiState.value = uiState.value.copy(isLoading = true, error = null)
+    fun clearLoginSuccess() {
+        uiState.value = uiState.value.copy(loginSuccess = false)
+    }
 
-        if(uiState.value.email.isNullOrEmpty()) {
+    fun login() {
+        // começar login: limpar erro e sucesso anterior
+        uiState.value = uiState.value.copy(isLoading = true, error = null, loginSuccess = false)
+
+        if (uiState.value.email.isNullOrEmpty()) {
             uiState.value = uiState.value.copy(
                 error = "O email é obrigatório",
                 isLoading = false
@@ -55,27 +61,28 @@ class LoginViewModel @Inject constructor(
         loginRepository.login(
             uiState.value.email!!,
             uiState.value.password!!
-
         ).onEach { result ->
-
-            when(result) {
+            when (result) {
                 is ResultWrapper.Success -> {
                     uiState.value = uiState.value.copy(
                         isLoading = false,
-                        error = null
-                    )
-                    onLoginSucess(
+                        error = null,
+                        loginSuccess = true
                     )
                 }
+
                 is ResultWrapper.Loading -> {
                     uiState.value = uiState.value.copy(
-                        isLoading = true
+                        isLoading = true,
+                        error = null
                     )
                 }
+
                 is ResultWrapper.Error -> {
                     uiState.value = uiState.value.copy(
                         error = result.message,
-                        isLoading = false
+                        isLoading = false,
+                        loginSuccess = false
                     )
                 }
             }

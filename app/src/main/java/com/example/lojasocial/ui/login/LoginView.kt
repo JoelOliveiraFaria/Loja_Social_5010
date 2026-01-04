@@ -23,26 +23,35 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.lojasocial.R
 import com.example.lojasocial.ui.theme.IpcaButtonGreen
 import com.example.lojasocial.ui.theme.IpcaDarkGreen
 import com.example.lojasocial.ui.theme.WhiteColor
 
-// 1. ESTE É O COMPONENTE LÓGICO (STATEFUL)
-// Ele liga-se ao ViewModel e passa os dados para baixo
 @Composable
 fun LoginView(
+    navController: NavController,
     modifier: Modifier = Modifier,
-    onLoginSuccess: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState.value
+
+    // 🔹 OBSERVA O SUCESSO E NAVEGA (PADRÃO DO PROFESSOR)
+    LaunchedEffect(state.loginSuccess) {
+        if (state.loginSuccess) {
+            navController.navigate("welcome") {
+                popUpTo("login") { inclusive = true }
+            }
+            viewModel.clearLoginSuccess()
+        }
+    }
 
     LoginContent(
         state = state,
         onEmailChange = { viewModel.setEmail(it) },
         onPasswordChange = { viewModel.setPassword(it) },
-        onLoginClick = { viewModel.login(onLoginSuccess) }
+        onLoginClick = { viewModel.login() }
     )
 }
 
@@ -71,8 +80,9 @@ fun LoginContent(
         ) {
 
             Spacer(modifier = Modifier.height(40.dp))
+
             Image(
-                painter = painterResource(id = R.drawable.logo_sas), // Confirma se tens esta imagem
+                painter = painterResource(id = R.drawable.logo_sas),
                 contentDescription = "Logo IPCA",
                 modifier = Modifier
                     .width(250.dp)
@@ -80,49 +90,44 @@ fun LoginContent(
                 contentScale = ContentScale.Fit
             )
 
-            // --- CENTRO: FORMULÁRIO ---
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Campo Email
+
                 OutlinedTextField(
                     value = state.email ?: "",
-                    onValueChange = onEmailChange, // Usa a função passada por parâmetro
+                    onValueChange = onEmailChange,
                     label = { Text("Email", color = WhiteColor) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = WhiteColor,
                         unfocusedBorderColor = WhiteColor,
                         focusedTextColor = WhiteColor,
                         unfocusedTextColor = WhiteColor,
-                        cursorColor = WhiteColor,
-                        focusedLabelColor = WhiteColor,
-                        unfocusedLabelColor = WhiteColor
-                    ),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                        cursorColor = WhiteColor
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Campo Password
                 OutlinedTextField(
                     value = state.password ?: "",
-                    onValueChange = onPasswordChange, // Usa a função passada por parâmetro
+                    onValueChange = onPasswordChange,
                     label = { Text("Password", color = WhiteColor) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
-                        val image = if (passwordVisible)
-                            Icons.Filled.Visibility
-                        else
-                            Icons.Filled.VisibilityOff
-
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(imageVector = image, contentDescription = null, tint = WhiteColor)
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                contentDescription = null,
+                                tint = WhiteColor
+                            )
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
@@ -130,17 +135,14 @@ fun LoginContent(
                         unfocusedBorderColor = WhiteColor,
                         focusedTextColor = WhiteColor,
                         unfocusedTextColor = WhiteColor,
-                        cursorColor = WhiteColor,
-                        focusedLabelColor = WhiteColor,
-                        unfocusedLabelColor = WhiteColor
+                        cursorColor = WhiteColor
                     )
                 )
 
-                // Mensagem de Erro
                 if (state.error != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = state.error!!,
+                        text = state.error,
                         color = Color(0xFFEF5350),
                         fontSize = 14.sp
                     )
@@ -148,9 +150,8 @@ fun LoginContent(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Botão Login
                 Button(
-                    onClick = onLoginClick, // Usa a função passada por parâmetro
+                    onClick = onLoginClick,
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
                         .height(50.dp),
@@ -174,15 +175,14 @@ fun LoginContent(
                 }
             }
 
-            // --- FUNDO: LOGO LOJA SOCIAL ---
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(bottom = 32.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                    painter = painterResource(id = R.drawable.lojasocial_logo),
                     contentDescription = "Logo Loja Social",
-                    modifier = Modifier.size(60.dp)
+                    modifier = Modifier.size(160.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -196,13 +196,11 @@ fun LoginContent(
     }
 }
 
-// 3. AGORA O PREVIEW JÁ FUNCIONA
-// Porque chamamos o LoginContent com dados falsos e sem ViewModel
 @Preview(showBackground = true)
 @Composable
-fun LoginViewPreview() {
+fun LoginPreview() {
     LoginContent(
-        state = LoginState(email = "exemplo@ipca.pt", isLoading = false),
+        state = LoginState(email = "teste@ipca.pt"),
         onEmailChange = {},
         onPasswordChange = {},
         onLoginClick = {}
