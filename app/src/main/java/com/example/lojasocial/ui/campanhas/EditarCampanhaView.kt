@@ -110,7 +110,6 @@ fun EditarCampanhaView(
                             dataFim = fim
                         )
                     ) {
-                        // volta para detalhes (ou lista)
                         navController.popBackStack()
                     }
                 },

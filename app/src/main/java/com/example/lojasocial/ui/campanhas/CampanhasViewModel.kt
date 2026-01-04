@@ -87,7 +87,6 @@ class CampanhasViewModel @Inject constructor(
                 }
 
                 is ResultWrapper.Loading -> {
-                    // não deve acontecer aqui (obterCampanha é suspend), mas fica seguro
                     _detalheState.value = _detalheState.value.copy(isLoading = true)
                 }
             }
@@ -132,7 +131,6 @@ class CampanhasViewModel @Inject constructor(
         viewModelScope.launch {
             when (val r = repo.eliminarCampanha(id)) {
                 is ResultWrapper.Success -> {
-                    // opcional: limpar detalhe se era o mesmo
                     val atual = _detalheState.value.campanha
                     if (atual != null && atual.id == id) {
                         _detalheState.value = CampanhaDetalheState()
