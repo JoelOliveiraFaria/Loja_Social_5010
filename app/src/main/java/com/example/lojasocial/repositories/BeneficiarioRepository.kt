@@ -11,7 +11,7 @@ interface BeneficiarioRepository {
 
     suspend fun atualizarBeneficiario(b: Beneficiario): ResultWrapper<Unit>
 
-    suspend fun eliminarBeneficiario(id: String): ResultWrapper<Unit>
+    //suspend fun eliminarBeneficiario(id: String): ResultWrapper<Unit>
 
     suspend fun obterBeneficiario(id: String): ResultWrapper<Beneficiario>
 

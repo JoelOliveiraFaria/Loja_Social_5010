@@ -47,10 +47,6 @@ fun DetalhesBeneficiarioView(
         navController = navController,
         state = detalhe,
         onEditClick = { benId -> navController.navigate("beneficiarios/$benId/edit") },
-        onDeleteClick = { benId ->
-            viewModel.eliminar(benId)
-            navController.popBackStack()
-        },
         onBack = { navController.popBackStack() }
     )
 }
@@ -63,7 +59,6 @@ fun DetalhesBeneficiarioContent(
     navController: NavController,
     state: BeneficiarioDetalheState,
     onEditClick: (String) -> Unit,
-    onDeleteClick: (String) -> Unit,
     onBack: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -156,6 +151,7 @@ fun DetalhesBeneficiarioContent(
 
                 Spacer(Modifier.width(12.dp))
 
+                /*
                 // Botão Eliminar
                 Button(
                     onClick = { showDeleteDialog = true },
@@ -164,11 +160,11 @@ fun DetalhesBeneficiarioContent(
                     modifier = Modifier
                         .weight(1f)
                         .height(50.dp)
-                ) { Text("Eliminar", color = TextWhite) }
+                ) { Text("Eliminar", color = TextWhite) } */
             }
         }
     }
-
+/*
     // Dialog de Confirmação
     if (showDeleteDialog && b != null) {
         AlertDialog(
@@ -188,6 +184,7 @@ fun DetalhesBeneficiarioContent(
             }
         )
     }
+    */
 }
 
 // ---------------------------------------------------------
@@ -225,7 +222,6 @@ fun DetalhesBeneficiarioPreview() {
         navController = rememberNavController(),
         state = stateMock,
         onEditClick = {},
-        onDeleteClick = {},
         onBack = {}
     )
 }

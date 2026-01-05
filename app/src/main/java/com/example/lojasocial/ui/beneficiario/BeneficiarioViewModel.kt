@@ -125,7 +125,7 @@ class BeneficiarioViewModel @Inject constructor(
             }
         }
     }
-
+/*
     fun eliminar(id: String) {
         viewModelScope.launch {
             when (val r = repo.eliminarBeneficiario(id)) {
@@ -143,5 +143,5 @@ class BeneficiarioViewModel @Inject constructor(
                 }
             }
         }
-    }
+    } */
 }

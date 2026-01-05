@@ -75,7 +75,7 @@ class BeneficiarioRepositoryFirestore @Inject constructor(
         }
     }
 
-    override suspend fun eliminarBeneficiario(id: String): ResultWrapper<Unit> {
+   /* override suspend fun eliminarBeneficiario(id: String): ResultWrapper<Unit> {
         return try {
             col.document(id).delete().await()
             ResultWrapper.Success(Unit)
@@ -83,7 +83,7 @@ class BeneficiarioRepositoryFirestore @Inject constructor(
             ResultWrapper.Error(e.message ?: "Erro ao eliminar campanha")
         }
     }
-
+*/
     override suspend fun obterBeneficiario(id: String): ResultWrapper<Beneficiario> {
         return try {
             val d = col.document(id).get().await()
