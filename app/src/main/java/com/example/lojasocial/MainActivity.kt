@@ -27,6 +27,12 @@ import com.example.lojasocial.ui.beneficiario.EditarBeneficiarioView
 import com.example.lojasocial.ui.produtos.CriarProdutoView
 import com.example.lojasocial.ui.produtos.ProdutosView
 import com.example.lojasocial.ui.produtos.DetalhesProdutoView
+//Imports Pedidos
+import com.example.lojasocial.ui.pedidos.PedidosView
+import com.example.lojasocial.ui.pedidos.NovosPedidosView
+import com.example.lojasocial.ui.pedidos.PedidosAndamentoView
+import com.example.lojasocial.ui.pedidos.PedidosTerminadosView
+import com.example.lojasocial.ui.pedidos.PedidoDetalhesView
 // Outros Imports
 import com.example.lojasocial.ui.login.LoginView
 import com.example.lojasocial.ui.profile.ProfileView
@@ -100,6 +106,32 @@ class MainActivity : ComponentActivity() {
                                 navController = navController
                             )
                         }
+                        // --- Pedidos ---
+                        composable("pedidos") {
+                            PedidosView(navController)
+                        }
+
+                        composable("pedidos/novos") {
+                            NovosPedidosView(navController)
+                        }
+
+                        composable("pedidos/andamento") {
+                            PedidosAndamentoView(navController)
+                        }
+
+                        composable("pedidos/terminados") {
+                            PedidosTerminadosView(navController)
+                        }
+                        composable(
+                            route = "pedidos/{pedidoId}",
+                            arguments = listOf(
+                                navArgument("pedidoId") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
+                            PedidoDetalhesView(navController, pedidoId)
+                        }
+
                     }
                 }
             }
