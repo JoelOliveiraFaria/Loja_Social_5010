@@ -62,12 +62,14 @@ fun PedidoDetalhesView(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
-        Text(
-            text = state.nomeBeneficiario,
-            color = TextWhite,
-            fontSize = 20.sp,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+        state.nomeBeneficiario?.let {
+            Text(
+                text = it,
+                color = TextWhite,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
 
         Spacer(Modifier.height(16.dp))
 

@@ -7,16 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.lojasocial.models.Pedido
 import com.example.lojasocial.repositories.BeneficiarioRepository
 import com.example.lojasocial.repositories.PedidoRepository
+import com.example.lojasocial.repositories.ResultWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-data class PedidoDetalhesState(
-    val isLoading: Boolean = true,
-    val pedido: Pedido? = null,
-    val nomeBeneficiario: String = "",
-    val error: String? = null
-)
 
 @HiltViewModel
 class PedidoDetalhesViewModel @Inject constructor(
@@ -28,6 +22,8 @@ class PedidoDetalhesViewModel @Inject constructor(
     val uiState: State<PedidoDetalhesState> = _uiState
 
     fun carregarPedido(pedidoId: String) {
+        _uiState.value = PedidoDetalhesState(isLoading = true)
+
         viewModelScope.launch {
             try {
                 val pedido = pedidoRepository.getPedidoById(pedidoId)
@@ -40,14 +36,27 @@ class PedidoDetalhesViewModel @Inject constructor(
                     return@launch
                 }
 
-                val beneficiario = beneficiarioRepository
-                    .getBeneficiarioById(pedido.beneficiarioId)
-
-                _uiState.value = PedidoDetalhesState(
-                    isLoading = false,
-                    pedido = pedido,
-                    nomeBeneficiario = beneficiario?.nome ?: "Desconhecido"
-                )
+                // Obter beneficiário usando o ResultWrapper
+                when (val resultado = beneficiarioRepository.obterBeneficiario(pedido.beneficiarioId)) {
+                    is ResultWrapper.Success -> {
+                        _uiState.value = PedidoDetalhesState(
+                            isLoading = false,
+                            pedido = pedido,
+                            nomeBeneficiario = resultado.value.nome // ou outra propriedade do beneficiário
+                        )
+                    }
+                    is ResultWrapper.Error -> {
+                        _uiState.value = PedidoDetalhesState(
+                            isLoading = false,
+                            pedido = pedido,
+                            nomeBeneficiario = "Desconhecido",
+                            error = resultado.message
+                        )
+                    }
+                    is ResultWrapper.Loading -> {
+                        _uiState.value = _uiState.value.copy(isLoading = true)
+                    }
+                }
 
             } catch (e: Exception) {
                 _uiState.value = PedidoDetalhesState(
