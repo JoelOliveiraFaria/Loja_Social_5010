@@ -1,5 +1,7 @@
 package com.example.lojasocial.di
 
+import com.example.lojasocial.repositories.BeneficiarioRepository
+import com.example.lojasocial.repositories.BeneficiarioRepositoryFirestore
 import com.example.lojasocial.repositories.CampanhasRepository
 import com.example.lojasocial.repositories.CampanhasRepositoryFirestore
 import com.google.firebase.auth.FirebaseAuth
@@ -31,4 +33,10 @@ object AppModule {
     fun provideCampanhasRepository(
         repo: CampanhasRepositoryFirestore
     ): CampanhasRepository = repo
+
+    @Provides
+    @Singleton
+    fun provideBeneficiarioRepository(
+        repo: BeneficiarioRepositoryFirestore
+    ): BeneficiarioRepository = repo
 }
