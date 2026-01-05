@@ -4,6 +4,8 @@ import com.example.lojasocial.repositories.BeneficiarioRepository
 import com.example.lojasocial.repositories.BeneficiarioRepositoryFirestore
 import com.example.lojasocial.repositories.CampanhasRepository
 import com.example.lojasocial.repositories.CampanhasRepositoryFirestore
+import com.example.lojasocial.repositories.ProdutoRepository
+import com.example.lojasocial.repositories.ProdutoRepositoryFirestore
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -39,4 +41,10 @@ object AppModule {
     fun provideBeneficiarioRepository(
         repo: BeneficiarioRepositoryFirestore
     ): BeneficiarioRepository = repo
+
+    @Provides
+    @Singleton
+    fun provideProdutoRepository(
+        repo: ProdutoRepositoryFirestore
+    ): ProdutoRepository = repo
 }

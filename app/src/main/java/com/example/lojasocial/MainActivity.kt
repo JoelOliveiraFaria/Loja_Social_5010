@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 // Imports Campanhas
 import com.example.lojasocial.ui.campanhas.CampanhasView
 import com.example.lojasocial.ui.campanhas.CriarCampanhaView
@@ -21,6 +23,10 @@ import com.example.lojasocial.ui.beneficiario.BeneficiarioView
 import com.example.lojasocial.ui.beneficiario.CriarBeneficiarioView
 import com.example.lojasocial.ui.beneficiario.DetalhesBeneficiarioView
 import com.example.lojasocial.ui.beneficiario.EditarBeneficiarioView
+// Imports Produtos/Inventário
+import com.example.lojasocial.ui.produtos.CriarProdutoView
+import com.example.lojasocial.ui.produtos.ProdutosView
+import com.example.lojasocial.ui.produtos.DetalhesProdutoView
 // Outros Imports
 import com.example.lojasocial.ui.login.LoginView
 import com.example.lojasocial.ui.profile.ProfileView
@@ -62,6 +68,7 @@ class MainActivity : ComponentActivity() {
                             EditarCampanhaView(navController, id)
                         }
 
+                        // --- Beneficiários ---
                         composable("beneficiarios") { BeneficiarioView(navController) }
                         composable("beneficiarios/add") { CriarBeneficiarioView(navController) }
                         composable("beneficiarios/{id}") { backStack ->
@@ -71,6 +78,27 @@ class MainActivity : ComponentActivity() {
                         composable("beneficiarios/{id}/edit") { backStack ->
                             val id = backStack.arguments?.getString("id") ?: ""
                             EditarBeneficiarioView(navController, id)
+                        }
+
+                        // --- Inventário (Corrigido) ---
+                        composable("inventario") {
+                            ProdutosView(navController)
+                        }
+
+                        composable("inventario/add") {
+                            CriarProdutoView(navController)
+                        }
+
+                        // Rota de Detalhes do Produto - Resolva o crash ao carregar no produto
+                        composable(
+                            route = "inventario/{produtoId}",
+                            arguments = listOf(navArgument("produtoId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val produtoId = backStackEntry.arguments?.getString("produtoId") ?: ""
+                            DetalhesProdutoView(
+                                produtoId = produtoId,
+                                navController = navController
+                            )
                         }
                     }
                 }
