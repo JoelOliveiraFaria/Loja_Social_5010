@@ -1,5 +1,6 @@
 package com.example.lojasocial.ui.login
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,8 +38,8 @@ fun LoginView(
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState.value
+    val context = LocalContext.current
 
-    // 🔹 OBSERVA O SUCESSO E NAVEGA (PADRÃO DO PROFESSOR)
     LaunchedEffect(state.loginSuccess) {
         if (state.loginSuccess) {
             navController.navigate("welcome") {
@@ -47,11 +49,19 @@ fun LoginView(
         }
     }
 
+    LaunchedEffect(state.recoverSuccess) { //
+        if (state.recoverSuccess) {
+            Toast.makeText(context, "Email de recuperação enviado!", Toast.LENGTH_LONG).show()
+            viewModel.clearRecoverSuccess()
+        }
+    }
+
     LoginContent(
         state = state,
         onEmailChange = { viewModel.setEmail(it) },
         onPasswordChange = { viewModel.setPassword(it) },
-        onLoginClick = { viewModel.login() }
+        onLoginClick = { viewModel.login() },
+        onRecoverClick = { viewModel.recoverPassword() } // <--- Passamos a ação aqui
     )
 }
 
@@ -61,7 +71,8 @@ fun LoginContent(
     state: LoginState,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    onLoginClick: () -> Unit
+    onLoginClick: () -> Unit,
+    onRecoverClick: () -> Unit // <--- Novo parâmetro
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -139,6 +150,20 @@ fun LoginContent(
                     )
                 )
 
+                // --- BOTÃO DE RECUPERAÇÃO ---
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = onRecoverClick,
+                    enabled = !state.isLoading
+                ) {
+                    Text(
+                        text = "Esqueceu a palavra-passe?",
+                        color = WhiteColor,
+                        fontSize = 14.sp
+                    )
+                }
+                // -----------------------------
+
                 if (state.error != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -203,6 +228,7 @@ fun LoginPreview() {
         state = LoginState(email = "teste@ipca.pt"),
         onEmailChange = {},
         onPasswordChange = {},
-        onLoginClick = {}
+        onLoginClick = {},
+        onRecoverClick = {}
     )
 }

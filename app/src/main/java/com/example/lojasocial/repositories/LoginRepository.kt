@@ -18,4 +18,14 @@ class LoginRepository @Inject constructor(
             emit(ResultWrapper.Error(message = e.message))
         }
     }
+
+    fun recoverPassword(email: String) : Flow<ResultWrapper<Unit>> = flow {
+        emit(ResultWrapper.Loading)
+        try{
+            auth.sendPasswordResetEmail(email).await()
+            emit(ResultWrapper.Success(Unit))
+        } catch (e : Exception) {
+            emit(ResultWrapper.Error(message = e.message))
+        }
+    }
 }

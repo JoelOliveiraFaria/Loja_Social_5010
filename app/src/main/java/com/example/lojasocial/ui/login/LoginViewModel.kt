@@ -15,7 +15,8 @@ data class LoginState(
     val password: String? = null,
     val error: String? = null,
     val isLoading: Boolean = false,
-    val loginSuccess: Boolean = false
+    val loginSuccess: Boolean = false,
+    val recoverSuccess: Boolean = false
 )
 
 @HiltViewModel
@@ -37,6 +38,42 @@ class LoginViewModel @Inject constructor(
     fun clearLoginSuccess() {
         uiState.value = uiState.value.copy(loginSuccess = false)
     }
+
+    fun clearRecoverSuccess() {
+        uiState.value = uiState.value.copy(recoverSuccess = false)
+    }
+
+    fun recoverPassword() {
+        val email = uiState.value.email
+
+        if (email.isNullOrEmpty()) {
+            uiState.value = uiState.value.copy(error = "Escreva o seu email primeiro.")
+            return
+        }
+
+        loginRepository.recoverPassword(email)
+            .onEach { result ->
+                when (result) {
+                    is ResultWrapper.Loading -> {
+                        uiState.value = uiState.value.copy(isLoading = true, error = null)
+                    }
+                    is ResultWrapper.Success -> {
+                        uiState.value = uiState.value.copy(
+                            isLoading = false,
+                            error = null,
+                            recoverSuccess = true
+                        )
+                    }
+                    is ResultWrapper.Error -> {
+                        uiState.value = uiState.value.copy(
+                            isLoading = false,
+                            error = result.message
+                        )
+                    }
+                }
+            }.launchIn(viewModelScope)
+    }
+
 
     fun login() {
         // começar login: limpar erro e sucesso anterior
