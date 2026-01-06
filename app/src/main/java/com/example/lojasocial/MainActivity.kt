@@ -33,6 +33,8 @@ import com.example.lojasocial.ui.pedidos.NovosPedidosView
 import com.example.lojasocial.ui.pedidos.PedidosAndamentoView
 import com.example.lojasocial.ui.pedidos.PedidosTerminadosView
 import com.example.lojasocial.ui.pedidos.PedidoDetalhesView
+//Import Entregas
+import com.example.lojasocial.ui.entrega.EntregaView
 // Outros Imports
 import com.example.lojasocial.ui.login.LoginView
 import com.example.lojasocial.ui.profile.ProfileView
@@ -132,6 +134,17 @@ class MainActivity : ComponentActivity() {
                             PedidoDetalhesView(navController, pedidoId)
                         }
 
+                        composable(
+                            route = "entrega/{beneficiarioId}/{pedidoId}"
+                        ) { backStackEntry ->
+                            val beneficiarioId = backStackEntry.arguments?.getString("beneficiarioId")!!
+                            val pedidoId = backStackEntry.arguments?.getString("pedidoId")!!
+
+                            EntregaView(
+                                beneficiarioId = beneficiarioId,
+                                pedidoId = pedidoId
+                            )
+                        }
                     }
                 }
             }

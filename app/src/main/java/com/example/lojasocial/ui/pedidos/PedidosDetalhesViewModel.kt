@@ -67,10 +67,17 @@ class PedidoDetalhesViewModel @Inject constructor(
         }
     }
 
-    fun aceitarPedido(pedidoId: String, onSuccess: () -> Unit) {
+    fun aceitarPedido(
+        pedidoId: String,
+        onNavigateToEntrega: (beneficiarioId: String, pedidoId: String) -> Unit
+    ) {
         viewModelScope.launch {
+            val pedido = pedidoRepository.getPedidoById(pedidoId) ?: return@launch
+
             pedidoRepository.aceitarPedido(pedidoId)
-            onSuccess()
+
+            // Navega para aba de criação de encomenda
+            onNavigateToEntrega(pedido.beneficiarioId, pedido.id!!)
         }
     }
 

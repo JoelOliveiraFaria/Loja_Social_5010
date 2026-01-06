@@ -105,16 +105,16 @@ fun PedidoDetalhesView(
 
             Button(
                 onClick = {
-                    viewModel.aceitarPedido(pedidoId) {
+                    viewModel.aceitarPedido(
+                        pedidoId = pedidoId
+                    ) { beneficiarioId, pedidoId ->
                         navController.navigate(
-                            "encomendas/add?pedidoId=$pedidoId"
+                            "entrega/$beneficiarioId/$pedidoId"
                         )
                     }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),
-                modifier = Modifier.weight(1f)
+                }
             ) {
-                Text("Aceitar")
+                Text("Aceitar pedido")
             }
         }
     }
