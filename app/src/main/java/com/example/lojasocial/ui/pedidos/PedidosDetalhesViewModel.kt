@@ -12,6 +12,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class PedidoDetalhesState(
+    val isLoading: Boolean = true,
+    val pedido: Pedido? = null,
+    val nomeBeneficiario: String? = "",
+    val error: String? = null
+)
+
 @HiltViewModel
 class PedidoDetalhesViewModel @Inject constructor(
     private val pedidoRepository: PedidoRepository,

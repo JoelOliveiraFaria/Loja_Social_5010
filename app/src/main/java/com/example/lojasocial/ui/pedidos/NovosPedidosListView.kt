@@ -24,9 +24,9 @@ private val TextWhite = Color.White
 private val TextWhiteSecondary = Color.White.copy(alpha = 0.7f)
 
 @Composable
-fun NovosPedidosView(
+fun NovosPedidosListView(
     navController: NavController,
-    viewModel: NovosPedidosViewModel = hiltViewModel()
+    viewModel: NovosPedidosListViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState.value
 

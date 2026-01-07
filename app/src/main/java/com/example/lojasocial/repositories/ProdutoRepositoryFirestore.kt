@@ -4,6 +4,7 @@ import com.example.lojasocial.models.LoteStock
 import com.example.lojasocial.models.Produto
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -25,17 +26,27 @@ class ProdutoRepositoryFirestore @Inject constructor(
         }
     }
 
-    override fun observeLotes(produtoId: String): Flow<ResultWrapper<List<LoteStock>>> = flow {
+   /* override fun observeLotes(produtoId: String): Flow<ResultWrapper<List<LoteStock>>> = flow {
         emit(ResultWrapper.Loading)
         try {
             // Acede à sub-coleção 'lotes' dentro do documento do produto
             val snapshot = col.document(produtoId).collection("lotes").get().await()
-            val list = snapshot.toObjects(LoteStock::class.java)
+            val list = snapshot.toObjects(LoteStock::class.java).filterNotNull()
             emit(ResultWrapper.Success(list))
         } catch (e: Exception) {
             emit(ResultWrapper.Error(e.message ?: "Erro ao carregar lotes"))
         }
     }
+    */
+
+    override fun observeLotes(produtoId: String): Flow<ResultWrapper<List<LoteStock>>> = flow {
+        emit(ResultWrapper.Loading)
+        val snapshot = col.document(produtoId).collection("lotes").get().await()
+        emit(ResultWrapper.Success(snapshot.toObjects(LoteStock::class.java).filterNotNull()))
+    }.catch { e ->
+        emit(ResultWrapper.Error(e.message ?: "Erro ao carregar lotes"))
+    }
+
 
     override suspend fun adicionarProduto(produto: Produto): ResultWrapper<Unit> {
         return try {

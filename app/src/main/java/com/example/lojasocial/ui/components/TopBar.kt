@@ -92,7 +92,7 @@ fun TopBarWithMenu(navController: NavController) {
                 Divider(color = Color(0xFF2C6B55))
 
                 DropdownMenuItem(
-                    text = { Text("Pedidos", color = MenuTextColor) },
+                    text = { Text("Pedidos/Entregas", color = MenuTextColor) },
                     onClick = {
                         expanded = false
                         navController.navigate("pedidos")

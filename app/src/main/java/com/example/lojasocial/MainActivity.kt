@@ -1,9 +1,11 @@
 package com.example.lojasocial
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -29,12 +31,13 @@ import com.example.lojasocial.ui.produtos.ProdutosView
 import com.example.lojasocial.ui.produtos.DetalhesProdutoView
 //Imports Pedidos
 import com.example.lojasocial.ui.pedidos.PedidosView
-import com.example.lojasocial.ui.pedidos.NovosPedidosView
-import com.example.lojasocial.ui.pedidos.PedidosAndamentoView
-import com.example.lojasocial.ui.pedidos.PedidosTerminadosView
+import com.example.lojasocial.ui.pedidos.NovosPedidosListView
 import com.example.lojasocial.ui.pedidos.PedidoDetalhesView
 //Import Entregas
-import com.example.lojasocial.ui.entrega.EntregaView
+import com.example.lojasocial.ui.entrega.CriarEntregaView
+import com.example.lojasocial.ui.entrega.EntregaDetalhesView
+import com.example.lojasocial.ui.entrega.EntregasListView
+import com.example.lojasocial.ui.entrega.EntregasTerminadasListView
 // Outros Imports
 import com.example.lojasocial.ui.login.LoginView
 import com.example.lojasocial.ui.profile.ProfileView
@@ -45,6 +48,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -114,36 +118,51 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("pedidos/novos") {
-                            NovosPedidosView(navController)
+                            NovosPedidosListView(navController)
                         }
 
-                        composable("pedidos/andamento") {
-                            PedidosAndamentoView(navController)
-                        }
-
-                        composable("pedidos/terminados") {
-                            PedidosTerminadosView(navController)
-                        }
                         composable(
                             route = "pedidos/{pedidoId}",
-                            arguments = listOf(
-                                navArgument("pedidoId") { type = NavType.StringType }
-                            )
+                            arguments = listOf(navArgument("pedidoId") { type = NavType.StringType })
                         ) { backStackEntry ->
-                            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
+                            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: return@composable
                             PedidoDetalhesView(navController, pedidoId)
                         }
 
-                        composable(
-                            route = "entrega/{beneficiarioId}/{pedidoId}"
-                        ) { backStackEntry ->
-                            val beneficiarioId = backStackEntry.arguments?.getString("beneficiarioId")!!
-                            val pedidoId = backStackEntry.arguments?.getString("pedidoId")!!
+                        // --- Entregas ---
+                        composable("entregas/andamento") {
+                            EntregasListView(navController)
+                        }
 
-                            EntregaView(
-                                beneficiarioId = beneficiarioId,
-                                pedidoId = pedidoId
+                        composable("entregas/terminados") {
+                            EntregasTerminadasListView(navController)
+                        }
+
+                        // Criar entrega sem pedido (botão "Criar entrega" direto)
+                        composable("entrega/novo") {
+                            CriarEntregaView(navController, beneficiarioId = null, pedidoId = null)
+                        }
+
+                        // Criar entrega a partir de um pedido
+                        composable(
+                            route = "entrega/{beneficiarioId}/{pedidoId}",
+                            arguments = listOf(
+                                navArgument("beneficiarioId") { type = NavType.StringType },
+                                navArgument("pedidoId") { type = NavType.StringType }
                             )
+                        ) { backStackEntry ->
+                            val beneficiarioId = backStackEntry.arguments?.getString("beneficiarioId")
+                            val pedidoId = backStackEntry.arguments?.getString("pedidoId")
+                            CriarEntregaView(navController, beneficiarioId, pedidoId)
+                        }
+
+                        // Detalhes da entrega
+                        composable(
+                            route = "entrega/detalhes/{entregaId}",
+                            arguments = listOf(navArgument("entregaId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val entregaId = backStackEntry.arguments?.getString("entregaId") ?: return@composable
+                            EntregaDetalhesView(navController, entregaId)
                         }
                     }
                 }

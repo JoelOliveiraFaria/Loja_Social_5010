@@ -4,14 +4,21 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.lojasocial.models.Pedido
 import com.example.lojasocial.models.PedidoStatus
 import com.example.lojasocial.repositories.PedidoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class NovosPedidosState(
+    val isLoading: Boolean = true,
+    val pedidos: List<Pedido> = emptyList(),
+    val error: String? = null
+)
+
 @HiltViewModel
-class NovosPedidosViewModel @Inject constructor(
+class NovosPedidosListViewModel @Inject constructor(
     private val pedidoRepository: PedidoRepository
 ) : ViewModel() {
 

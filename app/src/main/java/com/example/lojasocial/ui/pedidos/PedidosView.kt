@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -58,13 +57,19 @@ fun PedidosContent(navController: NavController) {
         )
 
         PedidoButton(
-            text = "Pedidos em Andamento",
-            onClick = { navController.navigate("pedidos/andamento") }
+            text = "Entregas",
+            onClick = { navController.navigate("entregas/andamento") }
         )
 
         PedidoButton(
-            text = "Pedidos Terminados",
-            onClick = { navController.navigate("pedidos/terminados") }
+            text = "Entregas Terminadas",
+            onClick = { navController.navigate("entregas/terminados") }
+        )
+
+        // Botão Criar Entrega (sem pedido)
+        PedidoButton(
+            text = "Criar Entrega",
+            onClick = { navController.navigate("entrega/novo") }
         )
     }
 }
