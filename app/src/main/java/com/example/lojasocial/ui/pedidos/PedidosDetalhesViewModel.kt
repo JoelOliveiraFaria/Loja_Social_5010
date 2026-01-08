@@ -43,7 +43,7 @@ class PedidoDetalhesViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Obter beneficiário usando o ResultWrapper
+
                 when (val resultado = beneficiarioRepository.obterBeneficiario(pedido.beneficiarioId)) {
                     is ResultWrapper.Success -> {
                         _uiState.value = PedidoDetalhesState(
@@ -83,7 +83,7 @@ class PedidoDetalhesViewModel @Inject constructor(
 
             pedidoRepository.aceitarPedido(pedidoId)
 
-            // Navega para aba de criação de encomenda
+
             onNavigateToEntrega(pedido.beneficiarioId, pedido.id!!)
         }
     }

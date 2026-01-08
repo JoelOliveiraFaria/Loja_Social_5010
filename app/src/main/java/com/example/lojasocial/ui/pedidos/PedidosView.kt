@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -13,7 +14,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.lojasocial.ui.components.TopBarWithMenu
 
-// Cores (IGUAIS às outras telas)
+
 private val BgGreen = Color(0xFF0B3B2E)
 private val LineGreen = Color(0xFF2C6B55)
 private val ButtonGreen = Color(0xFF1F6F43)
@@ -31,48 +32,53 @@ fun PedidosContent(navController: NavController) {
             .fillMaxSize()
             .background(BgGreen)
     ) {
-
         // TopBar
         TopBarWithMenu(navController)
 
         Divider(color = LineGreen)
 
-        // Título
+        // Título fixo em cima
         Text(
-            text = "Pedidos",
+            text = "Pedidos/Entregas",
             color = TextWhite,
             fontSize = 34.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp)
+                .padding(vertical = 24.dp, horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
 
-        // Botões
-        PedidoButton(
-            text = "Novos Pedidos",
-            onClick = { navController.navigate("pedidos/novos") }
-        )
-
-        PedidoButton(
-            text = "Entregas",
-            onClick = { navController.navigate("entregas/andamento") }
-        )
-
-        PedidoButton(
-            text = "Entregas Terminadas",
-            onClick = { navController.navigate("entregas/terminados") }
-        )
-
-        // Botão Criar Entrega (sem pedido)
-        PedidoButton(
-            text = "Criar Entrega",
-            onClick = { navController.navigate("entrega/novo") }
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            PedidoButton(
+                text = "Novos Pedidos",
+                onClick = { navController.navigate("pedidos/novos") }
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            PedidoButton(
+                text = "Entregas",
+                onClick = { navController.navigate("entregas/andamento") }
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            PedidoButton(
+                text = "Entregas Terminadas",
+                onClick = { navController.navigate("entregas/terminados") }
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            PedidoButton(
+                text = "Criar Entrega",
+                onClick = { navController.navigate("entrega/novo") }
+            )
+        }
     }
 }
+
 
 @Composable
 private fun PedidoButton(

@@ -64,4 +64,13 @@ class PedidoRepositoryFirestore @Inject constructor(
             )
         ).await()
     }
+
+    override suspend fun atualizarStatus(
+        pedidoId: String,
+        status: PedidoStatus
+    ) {
+        pedidosCollection.document(pedidoId)
+            .update("status", status.name)
+            .await()
+    }
 }

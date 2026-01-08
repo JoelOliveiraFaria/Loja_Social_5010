@@ -138,12 +138,17 @@ class MainActivity : ComponentActivity() {
                             EntregasTerminadasListView(navController)
                         }
 
-                        // Criar entrega sem pedido (botão "Criar entrega" direto)
+                        // --- Criar entrega sem pedido (botão "Criar entrega" direto) ---
                         composable("entrega/novo") {
-                            CriarEntregaView(navController, beneficiarioId = null, pedidoId = null)
+                            // Beneficiário será selecionado manualmente dentro da view
+                            CriarEntregaView(
+                                navController = navController,
+                                beneficiarioId = null,
+                                pedidoId = null
+                            )
                         }
 
-                        // Criar entrega a partir de um pedido
+                        // --- Criar entrega a partir de um pedido existente ---
                         composable(
                             route = "entrega/{beneficiarioId}/{pedidoId}",
                             arguments = listOf(
@@ -153,7 +158,13 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val beneficiarioId = backStackEntry.arguments?.getString("beneficiarioId")
                             val pedidoId = backStackEntry.arguments?.getString("pedidoId")
-                            CriarEntregaView(navController, beneficiarioId, pedidoId)
+
+                            // CriarEntregaView já vai preencher os campos automaticamente a partir do pedido
+                            CriarEntregaView(
+                                navController = navController,
+                                beneficiarioId = beneficiarioId,
+                                pedidoId = pedidoId
+                            )
                         }
 
                         // Detalhes da entrega

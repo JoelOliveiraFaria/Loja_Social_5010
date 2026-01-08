@@ -90,4 +90,19 @@ class ProdutoRepositoryFirestore @Inject constructor(
     }
 
     override fun getProdutosExpirados(): Flow<ResultWrapper<List<Produto>>> = flow { }
+
+    override suspend fun atualizarQuantidadeLote(
+        produtoId: String,
+        loteId: String,
+        novaQuantidade: Int
+    ) {
+        col.document(produtoId)
+            .collection("lotes")
+            .document(loteId)
+            .update("quantidade", novaQuantidade)
+            .await()
+    }
+
 }
+
+

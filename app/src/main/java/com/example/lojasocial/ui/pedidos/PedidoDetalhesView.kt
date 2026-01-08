@@ -2,10 +2,17 @@ package com.example.lojasocial.ui.pedidos
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -39,82 +46,126 @@ fun PedidoDetalhesView(
         TopBarWithMenu(navController)
         Divider(color = LineGreen)
 
-        if (state.isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 16.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Voltar",
+                    tint = TextWhite,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Text(
+                text = "Detalhes do Pedido",
+                color = TextWhite,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold
             )
+        }
+
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = LineGreen)
+            }
             return@Column
         }
 
         state.error?.let {
-            Text(
-                text = it,
-                color = ErrorRed,
-                modifier = Modifier.padding(16.dp)
-            )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = it,
+                    color = ErrorRed,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(32.dp)
+                )
+            }
             return@Column
         }
 
-        Text(
-            text = "Beneficiário",
-            color = TextWhite,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        state.nomeBeneficiario?.let {
-            Text(
-                text = it,
-                color = TextWhite,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(
-            text = "Pedido",
-            color = TextWhite,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Text(
-            text = state.pedido?.textoPedido ?: "",
-            color = TextWhite,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        Spacer(Modifier.weight(1f))
-
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = { showRecusarDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Recusar")
+            Text(
+                text = "Beneficiário",
+                color = TextWhite,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            state.nomeBeneficiario?.let {
+                Text(
+                    text = it,
+                    color = TextWhite,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 32.dp)
+                )
             }
 
-            Button(
-                onClick = {
-                    viewModel.aceitarPedido(
-                        pedidoId = pedidoId
-                    ) { beneficiarioId, pedidoId ->
-                        navController.navigate(
-                            "entrega/$beneficiarioId/$pedidoId"
-                        )
-                    }
-                }
+            Text(
+                text = "Pedido",
+                color = TextWhite,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = state.pedido?.textoPedido ?: "",
+                color = TextWhite,
+                fontSize = 22.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 28.sp,
+                modifier = Modifier.padding(bottom = 48.dp)
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Aceitar pedido")
+                Button(
+                    onClick = { showRecusarDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                ) {
+                    Text("Recusar", fontSize = 18.sp)
+                }
+
+                Button(
+                    onClick = {
+                        viewModel.aceitarPedido(pedidoId) { beneficiarioId, pedidoId ->
+                            navController.navigate("entrega/$beneficiarioId/$pedidoId")
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                ) {
+                    Text("Aceitar Pedido", fontSize = 18.sp)
+                }
             }
         }
     }

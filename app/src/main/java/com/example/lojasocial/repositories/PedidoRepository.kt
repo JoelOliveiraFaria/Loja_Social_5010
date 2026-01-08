@@ -16,4 +16,8 @@ interface PedidoRepository {
         pedidoId: String,
         motivo: String
     )
+    suspend fun atualizarStatus(
+        pedidoId: String,
+        status: PedidoStatus
+    )
 }

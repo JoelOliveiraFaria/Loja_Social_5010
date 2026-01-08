@@ -21,6 +21,6 @@ data class ItemEntrega(
 )
 
 data class LoteConsumido(
-    val loteId: String = "",
+    val loteId: String? = null,
     val quantidade: Int = 0
 )
