@@ -60,7 +60,6 @@ fun CriarBeneficiarioContent(
     var nif by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var telefone by remember { mutableStateOf("") }
-    var senhaTemporaria by remember { mutableStateOf("") }
     var estado by remember { mutableStateOf(true) }
 
 
@@ -132,22 +131,6 @@ fun CriarBeneficiarioContent(
 
             Spacer(Modifier.height(12.dp))
 
-            OutlinedTextField(
-                value = senhaTemporaria,
-                onValueChange = { senhaTemporaria = it },
-                label = { Text("Senha Temporária", color = TextWhite) },
-                placeholder = { Text("Definir senha inicial", color = Color.Gray) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = TextWhite,
-                    unfocusedBorderColor = TextWhite,
-                    focusedTextColor = TextWhite,
-                    unfocusedTextColor = TextWhite,
-                    cursorColor = TextWhite
-                    )
-                )
-            Spacer(Modifier.height(12.dp))
 
             // Campo Telefone
             OutlinedTextField(
@@ -215,8 +198,7 @@ fun CriarBeneficiarioContent(
                             nif = nif,
                             email = email,
                             telefone = telefone,
-                            estado = estado,
-                            senhaTemporaria = senhaTemporaria
+                            estado = estado
                         )
                     )
                 },

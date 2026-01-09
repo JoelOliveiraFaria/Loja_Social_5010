@@ -16,6 +16,7 @@ class BeneficiarioRepositoryFirestore @Inject constructor(
 ) : BeneficiarioRepository {
 
     private val col = db.collection("beneficiarios")
+    private val PASSWORD_DEFAULT = "Lojasocial2026"
 
     override fun observeBeneficiarios(): Flow<ResultWrapper<List<Beneficiario>>> = callbackFlow {
         trySend(ResultWrapper.Loading)
@@ -43,15 +44,15 @@ class BeneficiarioRepositoryFirestore @Inject constructor(
 
     override suspend fun criarBeneficiario(b: Beneficiario): ResultWrapper<Unit> {
 
-        if(b.email.isNullOrEmpty() || b.senhaTemporaria.isNullOrEmpty()) {
-            return ResultWrapper.Error("Erro: O email e a senha temporária não podem estar vazios.")
+        // Removemos a verificação da senha temporária, pois agora é fixa
+        if(b.email.isNullOrEmpty()) {
+            return ResultWrapper.Error("Erro: O email é obrigatório.")
         }
 
         return try {
-
-            val authResult = auth.createUserWithEmailAndPassword(b.email!!, b.senhaTemporaria!!).await()
+            // USAMOS A PASSWORD_DEFAULT
+            val authResult = auth.createUserWithEmailAndPassword(b.email!!, PASSWORD_DEFAULT).await()
             val uid = authResult.user?.uid ?: throw Exception("Erro ao obter UID do novo utilizador")
-
 
             val data = hashMapOf(
                 "nome" to b.nome,
@@ -60,10 +61,11 @@ class BeneficiarioRepositoryFirestore @Inject constructor(
                 "telefone" to b.telefone,
                 "estado" to b.estado
             )
+            // Guardamos com o mesmo ID do Auth
             col.document(uid).set(data).await()
             ResultWrapper.Success(Unit)
         } catch (e: Exception) {
-            ResultWrapper.Error(e.message ?: "Erro ao criar campanha")
+            ResultWrapper.Error(e.message ?: "Erro ao criar beneficiário")
         }
     }
 
