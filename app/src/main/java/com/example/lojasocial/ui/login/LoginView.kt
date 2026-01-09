@@ -28,8 +28,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.lojasocial.R
 import com.example.lojasocial.ui.theme.IpcaButtonGreen
-import com.example.lojasocial.ui.theme.IpcaDarkGreen
 import com.example.lojasocial.ui.theme.WhiteColor
+
+private val BgGreen = Color(0xFF0B3B2E)
 
 @Composable
 fun LoginView(
@@ -61,7 +62,7 @@ fun LoginView(
         onEmailChange = { viewModel.setEmail(it) },
         onPasswordChange = { viewModel.setPassword(it) },
         onLoginClick = { viewModel.login() },
-        onRecoverClick = { viewModel.recoverPassword() } // <--- Passamos a ação aqui
+        onRecoverClick = { viewModel.recoverPassword() }
     )
 }
 
@@ -72,14 +73,14 @@ fun LoginContent(
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit,
-    onRecoverClick: () -> Unit // <--- Novo parâmetro
+    onRecoverClick: () -> Unit
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(IpcaDarkGreen),
+            .background(BgGreen),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -150,7 +151,6 @@ fun LoginContent(
                     )
                 )
 
-                // --- BOTÃO DE RECUPERAÇÃO ---
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
                     onClick = onRecoverClick,
@@ -162,7 +162,6 @@ fun LoginContent(
                         fontSize = 14.sp
                     )
                 }
-                // -----------------------------
 
                 if (state.error != null) {
                     Spacer(modifier = Modifier.height(8.dp))

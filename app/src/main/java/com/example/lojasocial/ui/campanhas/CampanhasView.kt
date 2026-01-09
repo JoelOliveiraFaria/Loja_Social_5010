@@ -36,12 +36,10 @@ fun CampanhasView(
             .background(BgGreen)
     ) {
 
-        // TopBar + Menu
         TopBarWithMenu(navController)
 
         Divider(color = LineGreen)
 
-        // Título centrado (mockup)
         Text(
             text = "Campanhas",
             color = Color.White,
@@ -52,7 +50,6 @@ fun CampanhasView(
                 .padding(vertical = 16.dp)
         )
 
-        // Loading / Erro
         if (state.isLoading) {
             LinearProgressIndicator(
                 modifier = Modifier
@@ -70,7 +67,6 @@ fun CampanhasView(
             )
         }
 
-        // Lista (Firebase)
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -108,7 +104,6 @@ fun CampanhasView(
             }
         }
 
-        // Botão adicionar (mockup)
         Button(
             onClick = { navController.navigate("campanhas/add") },
             colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),

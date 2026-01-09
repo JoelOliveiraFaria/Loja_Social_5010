@@ -3,8 +3,11 @@ package com.example.lojasocial.ui.campanhas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -18,6 +21,7 @@ private val BgGreen = Color(0xFF0B3B2E)
 private val LineGreen = Color(0xFF2C6B55)
 private val ButtonGreen = Color(0xFF1F6F43)
 private val DangerRed = Color(0xFFD84343)
+private val TextWhite = Color.White
 
 @Composable
 fun DetalhesCampanhaView(
@@ -27,7 +31,6 @@ fun DetalhesCampanhaView(
 ) {
     val detalhe by viewModel.detalheState.collectAsState()
 
-    // carregar ao entrar
     LaunchedEffect(id) { viewModel.carregarCampanha(id) }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -40,15 +43,30 @@ fun DetalhesCampanhaView(
         TopBarWithMenu(navController)
         Divider(color = LineGreen)
 
-        Text(
-            text = "Campanha",
-            color = Color.White,
-            fontSize = 34.sp,
-            textAlign = TextAlign.Center,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp)
-        )
+                .padding(start = 16.dp, top = 16.dp, bottom = 24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Voltar",
+                    tint = TextWhite,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Campanha",
+                color = Color.White,
+                fontSize = 34.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            )
+        }
 
         if (detalhe.isLoading) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -77,7 +95,6 @@ fun DetalhesCampanhaView(
 
             Spacer(Modifier.weight(1f))
 
-            // Botões (mockup feel)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

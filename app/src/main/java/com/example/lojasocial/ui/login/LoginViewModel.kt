@@ -76,7 +76,6 @@ class LoginViewModel @Inject constructor(
 
 
     fun login() {
-        // começar login: limpar erro e sucesso anterior
         uiState.value = uiState.value.copy(isLoading = true, error = null, loginSuccess = false)
 
         if (uiState.value.email.isNullOrEmpty()) {
