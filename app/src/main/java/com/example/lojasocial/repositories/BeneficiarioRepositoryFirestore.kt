@@ -2,6 +2,7 @@ package com.example.lojasocial.repositories
 
 import com.example.lojasocial.models.Beneficiario
 import com.example.lojasocial.models.Campanha
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +11,8 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class BeneficiarioRepositoryFirestore @Inject constructor(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val auth: FirebaseAuth
 ) : BeneficiarioRepository {
 
     private val col = db.collection("beneficiarios")
@@ -40,7 +42,17 @@ class BeneficiarioRepositoryFirestore @Inject constructor(
     }
 
     override suspend fun criarBeneficiario(b: Beneficiario): ResultWrapper<Unit> {
+
+        if(b.email.isNullOrEmpty() || b.senhaTemporaria.isNullOrEmpty()) {
+            return ResultWrapper.Error("Erro: O email e a senha temporária não podem estar vazios.")
+        }
+
         return try {
+
+            val authResult = auth.createUserWithEmailAndPassword(b.email!!, b.senhaTemporaria!!).await()
+            val uid = authResult.user?.uid ?: throw Exception("Erro ao obter UID do novo utilizador")
+
+
             val data = hashMapOf(
                 "nome" to b.nome,
                 "nif" to b.nif,
@@ -48,7 +60,7 @@ class BeneficiarioRepositoryFirestore @Inject constructor(
                 "telefone" to b.telefone,
                 "estado" to b.estado
             )
-            col.add(data).await()
+            col.document(uid).set(data).await()
             ResultWrapper.Success(Unit)
         } catch (e: Exception) {
             ResultWrapper.Error(e.message ?: "Erro ao criar campanha")
@@ -74,16 +86,6 @@ class BeneficiarioRepositoryFirestore @Inject constructor(
             ResultWrapper.Error(e.message ?: "Erro ao atualizar campanha")
         }
     }
-
-   /* override suspend fun eliminarBeneficiario(id: String): ResultWrapper<Unit> {
-        return try {
-            col.document(id).delete().await()
-            ResultWrapper.Success(Unit)
-        } catch (e: Exception) {
-            ResultWrapper.Error(e.message ?: "Erro ao eliminar campanha")
-        }
-    }
-*/
     override suspend fun obterBeneficiario(id: String): ResultWrapper<Beneficiario> {
         return try {
             val d = col.document(id).get().await()

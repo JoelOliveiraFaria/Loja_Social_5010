@@ -6,6 +6,7 @@ data class Beneficiario (
     val nif : String? = null,
     val email : String? = null,
     val telefone : String? = null,
-    val estado : Boolean? = true
+    val estado : Boolean? = true,
+    val senhaTemporaria : String? = null
 )
 
