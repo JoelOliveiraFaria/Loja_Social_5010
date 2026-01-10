@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.lojasocial.models.Campanha
+import com.example.lojasocial.ui.components.TopBarVoltar
 import com.example.lojasocial.ui.components.TopBarWithMenu
 
 private val BgGreen = Color(0xFF0B3B2E)
@@ -56,7 +57,7 @@ fun EditarCampanhaView(
             .fillMaxSize()
             .background(BgGreen)
     ) {
-        TopBarWithMenu(navController)
+        TopBarVoltar(navController, "Editar Campanha")
         Divider(color = LineGreen)
 
         Row(

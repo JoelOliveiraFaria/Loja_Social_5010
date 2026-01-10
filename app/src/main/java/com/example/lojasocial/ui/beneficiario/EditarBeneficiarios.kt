@@ -15,6 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.lojasocial.models.Beneficiario
+import com.example.lojasocial.ui.components.TopBarVoltar
 import com.example.lojasocial.ui.components.TopBarWithMenu
 
 // Cores do tema
@@ -93,7 +94,7 @@ fun EditarBeneficiarioContent(
             .fillMaxSize()
             .background(BgGreen)
     ) {
-        TopBarWithMenu(navController)
+        TopBarVoltar(navController, "Editar Beneficiário")
         Divider(color = LineGreen)
 
         Text(

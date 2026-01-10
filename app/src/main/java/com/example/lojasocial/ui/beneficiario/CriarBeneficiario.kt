@@ -15,6 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.lojasocial.models.Beneficiario
+import com.example.lojasocial.ui.components.TopBarVoltar
 import com.example.lojasocial.ui.components.TopBarWithMenu
 
 // Cores do tema
@@ -69,7 +70,7 @@ fun CriarBeneficiarioContent(
             .background(BgGreen)
     ) {
         // TopBar
-        TopBarWithMenu(navController)
+        TopBarVoltar(navController, "Adicionar Beneficiário")
         Divider(color = LineGreen)
 
         // Título

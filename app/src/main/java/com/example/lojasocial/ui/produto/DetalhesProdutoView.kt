@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.lojasocial.models.LoteStock
+import com.example.lojasocial.ui.components.TopBarVoltar
 import com.example.lojasocial.ui.components.TopBarWithMenu
 
 @Composable
@@ -40,7 +41,7 @@ fun DetalhesProdutoView(
     }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0B3B2E))) {
-        TopBarWithMenu(navController)
+        TopBarVoltar(navController, "Detalhes do Produto")
 
         Column(modifier = Modifier.padding(16.dp)) {
             IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.offset(x = (-12).dp)) {

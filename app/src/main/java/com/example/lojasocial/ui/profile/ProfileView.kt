@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.lojasocial.R
+import com.example.lojasocial.ui.components.TopBarVoltar
 import com.example.lojasocial.ui.components.TopBarWithMenu
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -41,7 +42,7 @@ fun ProfileView(navController: NavController) {
             .fillMaxSize()
             .background(BgGreen)
     ) {
-        TopBarWithMenu(navController)
+        TopBarVoltar(navController, "Perfil")
 
         Spacer(
             modifier = Modifier

@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.lojasocial.ui.components.TopBarVoltar
 import com.example.lojasocial.ui.components.TopBarWithMenu
 
 @Composable
@@ -23,7 +24,7 @@ fun CriarProdutoView(
 
     // Fundo verde escuro consistente com o tema
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0B3B2E))) {
-        TopBarWithMenu(navController)
+        TopBarVoltar(navController, "Criar Produto")
 
         Column(modifier = Modifier.padding(16.dp)) {
             Text(

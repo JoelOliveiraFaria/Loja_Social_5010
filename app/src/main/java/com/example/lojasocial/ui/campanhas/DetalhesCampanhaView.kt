@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.lojasocial.ui.components.TopBarVoltar
 import com.example.lojasocial.ui.components.TopBarWithMenu
 
 private val BgGreen = Color(0xFF0B3B2E)
@@ -40,7 +41,7 @@ fun DetalhesCampanhaView(
             .fillMaxSize()
             .background(BgGreen)
     ) {
-        TopBarWithMenu(navController)
+        TopBarVoltar(navController, "Detalhes da Campanha")
         Divider(color = LineGreen)
 
         Row(
@@ -49,14 +50,7 @@ fun DetalhesCampanhaView(
                 .padding(start = 16.dp, top = 16.dp, bottom = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Voltar",
-                    tint = TextWhite,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
+
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "Campanha",
