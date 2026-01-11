@@ -1,6 +1,5 @@
 package com.example.lojasocial.ui.entrega
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -13,24 +12,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.lojasocial.R
 import com.example.lojasocial.models.Beneficiario
 import com.example.lojasocial.models.Entrega
 import com.example.lojasocial.models.EntregaStatus
+import com.example.lojasocial.ui.components.TopBarWithMenu
 import com.example.lojasocial.ui.entregas.EntregasListViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -57,41 +56,20 @@ fun EntregasListView(
                 Icon(Icons.Default.Add, contentDescription = "Criar Entrega")
             }
         },
-        containerColor = BgGreen
+        containerColor = BgGreen,
+        // CORREÇÃO: Remove o padding automático da barra de estado para o verde ir até ao topo
+        contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .statusBarsPadding()
+            // Removido .statusBarsPadding() para igualar a WelcomeView
         ) {
-            // --- CABEÇALHO ---
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Voltar",
-                        tint = WhiteColor
-                    )
-                }
+            // --- NAVBAR ---
+            TopBarWithMenu(navController = navController)
 
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
-                    modifier = Modifier
-                        .height(50.dp)
-                        .align(Alignment.Center)
-                        .clickable { navController.navigate("welcome") },
-                    contentScale = ContentScale.Fit
-                )
-            }
+            Divider(color = Color(0xFF2C6B55))
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -103,7 +81,7 @@ fun EntregasListView(
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
 
-            // --- FILTROS DE STATUS ATUALIZADOS ---
+            // --- FILTROS ---
             Row(
                 modifier = Modifier
                     .padding(horizontal = 24.dp, vertical = 12.dp)
@@ -132,7 +110,7 @@ fun EntregasListView(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(entregas) { entrega ->
@@ -170,6 +148,18 @@ fun EntregaItemCard(
         SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(entrega.dataCriacao))
     }
 
+    val (statusBg, statusContent, statusIcon, statusLabel) = when (entrega.status) {
+        EntregaStatus.EM_ANDAMENTO -> Tuple4(
+            Color(0xFFE8F5E9), Color(0xFF1B5E20), Icons.Default.LocalShipping, "Em Andamento"
+        )
+        EntregaStatus.PRONTO -> Tuple4(
+            Color(0xFFE1F5FE), Color(0xFF0277BD), Icons.Default.Inventory, "Pronto"
+        )
+        EntregaStatus.ENTREGUE -> Tuple4(
+            Color(0xFFEEEEEE), Color(0xFF424242), Icons.Default.DoneAll, "Entregue"
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -183,35 +173,17 @@ fun EntregaItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    color = Color(0xFFE8F5E9),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
+                Surface(color = statusBg, shape = RoundedCornerShape(8.dp)) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.LocalShipping,
-                            contentDescription = null,
-                            tint = IpcaButtonGreen,
-                            modifier = Modifier.size(14.dp)
-                        )
+                        Icon(imageVector = statusIcon, contentDescription = null, tint = statusContent, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = entrega.status.name,
-                            color = IpcaButtonGreen,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(text = statusLabel, color = statusContent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
-
-                Text(
-                    text = dataFmt,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+                Text(text = dataFmt, fontSize = 12.sp, color = Color.Gray)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -272,3 +244,5 @@ fun StatusFilterChip(label: String, isSelected: Boolean, onClick: () -> Unit) {
         )
     }
 }
+
+data class Tuple4<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)

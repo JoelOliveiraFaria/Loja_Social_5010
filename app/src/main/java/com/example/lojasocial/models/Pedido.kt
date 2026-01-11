@@ -1,4 +1,5 @@
 package com.example.lojasocial.models
+
 import com.google.firebase.Timestamp
 
 data class Pedido(
@@ -6,7 +7,8 @@ data class Pedido(
     val beneficiarioId: String = "",
     val textoPedido: String = "",
     val status: PedidoStatus = PedidoStatus.NOVO,
-    val respostaRecusa: String? = null
+    val respostaRecusa: String? = null,
+    val dataCriacao: Timestamp? = null
 )
 
 enum class PedidoStatus {

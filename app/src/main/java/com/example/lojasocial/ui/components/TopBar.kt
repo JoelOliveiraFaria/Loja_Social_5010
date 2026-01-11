@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
@@ -26,14 +25,13 @@ import androidx.navigation.NavController
 import com.example.lojasocial.R
 import com.google.firebase.auth.FirebaseAuth
 
-private val MenuCircle = Color(0xFF0F4A3A)
 private val MenuBackgroundGreen = Color(0xFF0B3B2E)
 private val MenuTextColor = Color.White
 
 @Composable
 fun TopBarVoltar(
     navController: NavController,
-    title: String
+    title: String? = null // MUDANÇA: Agora é opcional e default é null
 ) {
     Row(
         modifier = Modifier
@@ -41,16 +39,17 @@ fun TopBarVoltar(
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = {navController.popBackStack()}) {
+        IconButton(onClick = { navController.popBackStack() }) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Voltar",
                 tint = Color.White
             )
         }
         Spacer(Modifier.width(8.dp))
 
-        if (title != null) {
+        // Se tiver título, mostra o Texto. Se for null, mostra o Logo.
+        if (!title.isNullOrEmpty()) {
             Text(
                 text = title,
                 color = Color.White,
@@ -58,7 +57,7 @@ fun TopBarVoltar(
             )
         } else {
             Image(
-                painter = painterResource(id = R.drawable.logo_sas),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo",
                 modifier = Modifier.height(42.dp)
             )
@@ -125,7 +124,7 @@ fun TopBarWithMenu(navController: NavController) {
                     text = { Text("Pedidos", color = MenuTextColor) },
                     onClick = {
                         expanded = false
-                        navController.navigate("pedidos/novos")
+                        navController.navigate("pedidos")
                     }
                 )
                 Divider(color = Color(0xFF2C6B55))

@@ -1,14 +1,11 @@
 package com.example.lojasocial.ui.entrega
 
 import android.app.DatePickerDialog
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
@@ -16,16 +13,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.lojasocial.R
 import com.example.lojasocial.models.EntregaStatus
+import com.example.lojasocial.ui.components.TopBarVoltar
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,7 +36,6 @@ fun EntregaDetalhesView(
 ) {
     val entrega by viewModel.entrega
     val produtosInventario by viewModel.produtosDisponiveis.collectAsState()
-    val avisoStock by viewModel.avisoStock
     val context = LocalContext.current
     var showProdutoDialog by remember { mutableStateOf(false) }
 
@@ -59,47 +53,67 @@ fun EntregaDetalhesView(
     )
 
     Scaffold(
-        containerColor = Color(0xFF0B3B2E),
+        containerColor = BgGreen,
+        // CORREÇÃO: Remove padding de topo
+        contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
-            Button(
-                onClick = { viewModel.guardar { navController.popBackStack() } },
-                modifier = Modifier.fillMaxWidth().padding(16.dp).height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F6F43)),
-                shape = RoundedCornerShape(12.dp)
+            Surface(
+                color = BgGreen,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Guardar Alterações", color = Color.White, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = { viewModel.guardar { navController.popBackStack() } },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(56.dp)
+                        .navigationBarsPadding(),
+                    colors = ButtonDefaults.buttonColors(containerColor = IpcaButtonGreen),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Guardar Alterações", color = WhiteColor, fontWeight = FontWeight.Bold)
+                }
             }
         }
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).statusBarsPadding()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
 
-            // Header (Logo + Back)
-            Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.align(Alignment.CenterStart)) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
-                }
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = null,
-                    modifier = Modifier.height(50.dp).align(Alignment.Center).clickable { navController.navigate("welcome") },
-                    contentScale = ContentScale.Fit
-                )
-            }
+            // --- NAVBAR CORRETA ---
+            TopBarVoltar(navController = navController, title = "Editar Entrega")
 
-            LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                item { Text("Editar Entrega", style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold) }
+            // --- LINHA SEPARADORA ---
+            Divider(color = Color(0xFF2C6B55))
 
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Removido título duplicado "Editar Entrega"
+
+                // Cartão de Informações
                 item {
-                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(12.dp)) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Beneficiário: ${viewModel.nomeBeneficiario.value}", fontWeight = FontWeight.Bold)
+                            Text("Beneficiário: ${viewModel.nomeBeneficiario.value}", fontWeight = FontWeight.Bold, color = Color.Black)
                             Text("Pedido: ${viewModel.textoPedido.value}", fontSize = 14.sp, color = Color.Gray)
 
                             Spacer(Modifier.height(12.dp))
                             Text("Estado", fontSize = 12.sp, color = Color.Gray)
 
-                            // CORREÇÃO: Row com weights para não cortar o texto
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            // Linha de Chips de Estado
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
                                 EntregaStatus.values().forEach { status ->
                                     FilterChip(
                                         modifier = Modifier.weight(1f),
@@ -107,16 +121,25 @@ fun EntregaDetalhesView(
                                         onClick = { viewModel.atualizarStatus(status) },
                                         label = {
                                             Text(status.name, fontSize = 9.sp, maxLines = 1)
-                                        }
+                                        },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = IpcaButtonGreen,
+                                            selectedLabelColor = WhiteColor
+                                        )
                                     )
                                 }
                             }
 
                             if (entrega?.status == EntregaStatus.ENTREGUE) {
-                                OutlinedButton(onClick = { datePickerDialog.show() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                                OutlinedButton(
+                                    onClick = { datePickerDialog.show() },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                                ) {
                                     Icon(Icons.Default.DateRange, null)
                                     Spacer(Modifier.width(8.dp))
-                                    val dataT = entrega?.dataEntrega?.let { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it)) } ?: "Data de Entrega"
+                                    val dataT = entrega?.dataEntrega?.let {
+                                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it))
+                                    } ?: "Data de Entrega"
                                     Text(dataT)
                                 }
                             }
@@ -124,16 +147,22 @@ fun EntregaDetalhesView(
                     }
                 }
 
+                // Header Produtos
                 item {
-                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                        Text("Produtos", color = Color.White.copy(alpha = 0.7f))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        Arrangement.SpaceBetween,
+                        Alignment.CenterVertically
+                    ) {
+                        Text("Produtos", color = WhiteColor.copy(alpha = 0.7f))
                         TextButton(onClick = { showProdutoDialog = true }) {
-                            Icon(Icons.Default.Add, null, tint = Color.White)
-                            Text("Adicionar", color = Color.White)
+                            Icon(Icons.Default.Add, null, tint = WhiteColor)
+                            Text("Adicionar", color = WhiteColor)
                         }
                     }
                 }
 
+                // Lista de Produtos
                 items(entrega?.itens ?: emptyList()) { item ->
                     ProdutoItemCard(
                         item = item,
@@ -142,6 +171,9 @@ fun EntregaDetalhesView(
                         onRemover = { viewModel.removerProduto(item.produtoId) }
                     )
                 }
+
+                // Espaço extra para scroll
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }
@@ -149,7 +181,10 @@ fun EntregaDetalhesView(
     if (showProdutoDialog) {
         InventarioDialog(
             produtos = produtosInventario,
-            onProdutoSelected = { viewModel.adicionarProduto(it); showProdutoDialog = false },
+            onProdutoSelected = {
+                viewModel.adicionarProduto(it)
+                showProdutoDialog = false
+            },
             onDismiss = { showProdutoDialog = false }
         )
     }

@@ -1,5 +1,6 @@
 package com.example.lojasocial.repositories
 
+import android.util.Log // Importante para ver o erro do índice
 import com.example.lojasocial.models.Pedido
 import com.example.lojasocial.models.PedidoStatus
 import com.google.firebase.firestore.FirebaseFirestore
@@ -22,17 +23,23 @@ class PedidoRepositoryFirestore @Inject constructor(
         status: PedidoStatus
     ): Flow<List<Pedido>> = callbackFlow {
 
+        // Query: Filtra pelo Status E Ordena pela Data (Mais recente primeiro)
         val listener = pedidosCollection
             .whereEqualTo("status", status.name)
             .orderBy("dataCriacao", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
 
                 if (error != null) {
+                    // --- PONTO CRÍTICO ---
+                    // Se a lista estiver vazia, verifique o Logcat por "FIRESTORE_ERRO".
+                    // Vai aparecer um link para criar o índice no Firebase Console.
+                    Log.e("FIRESTORE_ERRO", "Erro ao carregar pedidos (${status.name}): ${error.message}")
                     close(error)
                     return@addSnapshotListener
                 }
 
                 val pedidos = snapshot?.documents?.mapNotNull { doc ->
+                    // Converte o documento para o objeto Pedido e anexa o ID do documento
                     doc.toObject(Pedido::class.java)?.copy(id = doc.id)
                 } ?: emptyList()
 
@@ -43,8 +50,13 @@ class PedidoRepositoryFirestore @Inject constructor(
     }
 
     override suspend fun getPedidoById(pedidoId: String): Pedido? {
-        val doc = pedidosCollection.document(pedidoId).get().await()
-        return doc.toObject(Pedido::class.java)?.copy(id = doc.id)
+        return try {
+            val doc = pedidosCollection.document(pedidoId).get().await()
+            doc.toObject(Pedido::class.java)?.copy(id = doc.id)
+        } catch (e: Exception) {
+            Log.e("FIRESTORE_ERRO", "Erro ao buscar pedido $pedidoId: ${e.message}")
+            null
+        }
     }
 
     override suspend fun aceitarPedido(pedidoId: String) {

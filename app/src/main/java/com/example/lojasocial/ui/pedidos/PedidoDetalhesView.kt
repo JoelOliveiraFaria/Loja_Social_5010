@@ -1,28 +1,23 @@
 package com.example.lojasocial.ui.pedidos
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.lojasocial.R
+import com.example.lojasocial.ui.components.TopBarVoltar
 
 private val BgGreen = Color(0xFF0B3B2E)
 private val ButtonGreen = Color(0xFF1F6F43)
@@ -37,9 +32,7 @@ fun PedidoDetalhesView(
 ) {
     val state = viewModel.uiState.value
     var showRecusarDialog by remember { mutableStateOf(false) }
-
     var showAvisoAtivaDialog by remember { mutableStateOf(false) }
-
     val scrollState = rememberScrollState()
 
     LaunchedEffect(pedidoId) {
@@ -50,12 +43,8 @@ fun PedidoDetalhesView(
     if (showAvisoAtivaDialog) {
         AlertDialog(
             onDismissRequest = { showAvisoAtivaDialog = false },
-            title = {
-                Text("Entrega em Curso", fontWeight = FontWeight.Bold)
-            },
-            text = {
-                Text("Este beneficiário já possui uma entrega que ainda não foi concluída. Tem a certeza que deseja aceitar um novo pedido e criar outra entrega?")
-            },
+            title = { Text("Entrega em Curso", fontWeight = FontWeight.Bold) },
+            text = { Text("Este beneficiário já possui uma entrega ativa. Deseja criar outra?") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -65,9 +54,7 @@ fun PedidoDetalhesView(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen)
-                ) {
-                    Text("Sim, Aceitar")
-                }
+                ) { Text("Sim, Aceitar") }
             },
             dismissButton = {
                 TextButton(onClick = { showAvisoAtivaDialog = false }) {
@@ -86,44 +73,27 @@ fun PedidoDetalhesView(
             .background(BgGreen)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
+            modifier = Modifier.fillMaxSize()
         ) {
-            // --- CABEÇALHO ---
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Voltar",
-                        tint = TextWhite
-                    )
-                }
+            // --- NAVBAR ---
+            TopBarVoltar(navController = navController, title = null)
 
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
-                    modifier = Modifier
-                        .height(50.dp)
-                        .align(Alignment.Center)
-                        .clickable { navController.navigate("welcome") },
-                    contentScale = ContentScale.Fit
-                )
-            }
+            Divider(color = Color(0xFF2C6B55))
 
             if (state.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = TextWhite)
                 }
             } else if (state.error != null) {
-                Text(state.error!!, color = ErrorRed, modifier = Modifier.padding(16.dp))
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = state.error ?: "Erro desconhecido",
+                        color = ErrorRed,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             } else {
                 Column(
                     modifier = Modifier
@@ -157,6 +127,8 @@ fun PedidoDetalhesView(
                             Column {
                                 Text("Beneficiário", color = TextWhite.copy(alpha = 0.6f), fontSize = 12.sp)
                                 Text(state.nomeBeneficiario ?: "N/A", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                // MOSTRAR O EMAIL AQUI
+                                Text(state.emailBeneficiario ?: "", color = TextWhite.copy(alpha = 0.8f), fontSize = 14.sp)
                             }
                         }
                     }
@@ -203,7 +175,6 @@ fun PedidoDetalhesView(
 
                         Button(
                             onClick = {
-                                // Chama a nova função de verificação no ViewModel
                                 viewModel.verificarEaceitar(
                                     pedidoId = pedidoId,
                                     onAvisoEntregaAtiva = { showAvisoAtivaDialog = true },

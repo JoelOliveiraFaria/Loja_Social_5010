@@ -1,36 +1,28 @@
 package com.example.lojasocial.ui.campanhas
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.lojasocial.R
 import com.example.lojasocial.models.Campanha
+import com.example.lojasocial.ui.components.TopBarVoltar
 
 private val BgGreenColor = Color(0xFF0B3B2E)
 private val IpcaGreen = Color(0xFF1F6F43)
 private val WhiteFixed = Color.White
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CriarCampanhaView(
     navController: NavController,
@@ -42,37 +34,28 @@ fun CriarCampanhaView(
     var fimDigits by remember { mutableStateOf("") }
     var erroData by remember { mutableStateOf<String?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize().background(BgGreenColor)) {
-        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+    Scaffold(
+        containerColor = BgGreenColor,
+        // Remove padding automático do sistema para o verde ir até ao topo
+        contentWindowInsets = WindowInsets(0.dp)
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // --- NAVBAR CORRETA ---
+            TopBarVoltar(navController = navController, title = "Nova Campanha")
 
-            // --- CABEÇALHO COM LOGO ---
-            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.align(Alignment.CenterStart)) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = WhiteFixed)
-                }
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
-                    modifier = Modifier
-                        .height(50.dp)
-                        .align(Alignment.Center)
-                        .clickable { navController.navigate("welcome") },
-                    contentScale = ContentScale.Fit
-                )
-            }
+            // --- LINHA SEPARADORA ---
+            Divider(color = Color(0xFF2C6B55))
 
             Column(
                 modifier = Modifier
-                    .padding(24.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Text(
-                    "Nova Campanha",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = WhiteFixed,
-                    fontWeight = FontWeight.Bold
-                )
-
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // --- CAMPOS DE INPUT ---
@@ -133,11 +116,14 @@ fun CriarCampanhaView(
                 ) {
                     Text("Criar Campanha", fontWeight = FontWeight.Bold, color = WhiteFixed)
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
+// Manter as funções auxiliares (FieldWhite, DateFieldWhite) iguais...
 @Composable
 private fun FieldWhite(label: String, value: String, minLines: Int = 1, onChange: (String) -> Unit) {
     OutlinedTextField(

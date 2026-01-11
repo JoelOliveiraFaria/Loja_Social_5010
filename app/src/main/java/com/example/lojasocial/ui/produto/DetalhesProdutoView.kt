@@ -1,15 +1,12 @@
 package com.example.lojasocial.ui.produtos
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.CleaningServices
@@ -18,18 +15,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.lojasocial.R
 import com.example.lojasocial.models.LoteStock
 import com.example.lojasocial.ui.campanhas.DateMaskVisualTransformation
 import com.example.lojasocial.ui.campanhas.onlyDateDigits
+import com.example.lojasocial.ui.components.TopBarVoltar
 
 private val BgGreen = Color(0xFF0B3B2E)
 private val IpcaButtonGreen = Color(0xFF1F6F43)
@@ -48,6 +43,7 @@ fun DetalhesProdutoView(
 
     Scaffold(
         containerColor = BgGreen,
+        contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
             Surface(color = BgGreen, modifier = Modifier.fillMaxWidth()) {
                 Row(
@@ -79,26 +75,22 @@ fun DetalhesProdutoView(
             }
         }
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).statusBarsPadding()) {
-            // Cabeçalho (Logo + Voltar)
-            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.align(Alignment.CenterStart)) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = WhiteColor)
-                }
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = null,
-                    modifier = Modifier.height(50.dp).align(Alignment.Center).clickable { navController.navigate("welcome") },
-                    contentScale = ContentScale.Fit
-                )
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // --- NAVBAR VOLTAR ---
+            TopBarVoltar(navController = navController, title = "Detalhes")
+
+            Divider(color = Color(0xFF2C6B55))
 
             Text(
-                text = produto?.nome ?: "Detalhes",
+                text = produto?.nome ?: "Produto",
                 style = MaterialTheme.typography.headlineMedium,
                 color = WhiteColor,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
             )
 
             LazyColumn(
@@ -127,7 +119,7 @@ fun DetalhesProdutoView(
         }
     }
 
-    // --- DIÁLOGO COM MÁSCARA DE DATA ---
+    // --- DIÁLOGO ---
     if (showAddDialog) {
         var qtdInput by remember { mutableStateOf("") }
         var dateDigits by remember { mutableStateOf("") } // Apenas números (DDMMYYYY)
@@ -170,7 +162,6 @@ fun DetalhesProdutoView(
                     }
 
                     val finalDate = if (dateDigits.length == 8) {
-                        // Converte DDMMYYYY para o formato de BD AAAA-MM-DD
                         val dia = dateDigits.substring(0, 2)
                         val mes = dateDigits.substring(2, 4)
                         val ano = dateDigits.substring(4, 8)

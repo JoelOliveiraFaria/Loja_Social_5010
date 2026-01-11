@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Inventory // Import adicionado
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
@@ -68,6 +69,17 @@ fun WelcomeView(navController: NavController) {
             )
 
             // --- GRID DE ACESSO RÁPIDO ---
+
+            // NOVO: Inventário
+            MenuCard(
+                title = "Inventário",
+                subtitle = "Gestão de Stock e Artigos",
+                icon = Icons.Default.Inventory,
+                onClick = { navController.navigate("inventario") }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Beneficiários
             MenuCard(
                 title = "Beneficiários",
@@ -83,7 +95,7 @@ fun WelcomeView(navController: NavController) {
                 title = "Pedidos",
                 subtitle = "Novas solicitações",
                 icon = Icons.Default.Assignment,
-                onClick = { navController.navigate("pedidos/novos") }
+                onClick = { navController.navigate("pedidos") }
             )
 
             Spacer(modifier = Modifier.height(12.dp))

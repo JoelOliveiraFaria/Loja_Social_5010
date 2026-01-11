@@ -1,25 +1,17 @@
 package com.example.lojasocial.ui.produtos
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.lojasocial.R
+import com.example.lojasocial.ui.components.TopBarVoltar
 
 private val BgGreen = Color(0xFF0B3B2E)
 private val IpcaButtonGreen = Color(0xFF1F6F43)
@@ -30,26 +22,23 @@ fun CriarProdutoView(navController: NavController, viewModel: ProdutosViewModel 
     var nome by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.fillMaxSize().background(BgGreen)) {
-        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+    Scaffold(
+        containerColor = BgGreen,
+        contentWindowInsets = WindowInsets(0.dp)
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // --- NAVBAR VOLTAR ---
+            TopBarVoltar(navController = navController, title = "Novo Produto")
 
-            // --- CABEÇALHO ---
-            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.align(Alignment.CenterStart)) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = WhiteColor)
-                }
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
-                    modifier = Modifier.height(50.dp).align(Alignment.Center).clickable { navController.navigate("welcome") },
-                    contentScale = ContentScale.Fit
-                )
-            }
+            Divider(color = Color(0xFF2C6B55))
 
             Column(modifier = Modifier.padding(24.dp)) {
-                Text("Novo Produto", style = MaterialTheme.typography.headlineMedium, color = WhiteColor, fontWeight = FontWeight.Bold)
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = nome,
@@ -60,7 +49,9 @@ fun CriarProdutoView(navController: NavController, viewModel: ProdutosViewModel 
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         focusedBorderColor = IpcaButtonGreen,
-                        unfocusedBorderColor = WhiteColor.copy(alpha = 0.5f)
+                        unfocusedBorderColor = WhiteColor.copy(alpha = 0.5f),
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -76,7 +67,9 @@ fun CriarProdutoView(navController: NavController, viewModel: ProdutosViewModel 
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         focusedBorderColor = IpcaButtonGreen,
-                        unfocusedBorderColor = WhiteColor.copy(alpha = 0.5f)
+                        unfocusedBorderColor = WhiteColor.copy(alpha = 0.5f),
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )

@@ -30,7 +30,7 @@ import com.example.lojasocial.ui.produtos.CriarProdutoView
 import com.example.lojasocial.ui.produtos.ProdutosView
 import com.example.lojasocial.ui.produtos.DetalhesProdutoView
 //Imports Pedidos
-import com.example.lojasocial.ui.pedidos.NovosPedidosListView
+import com.example.lojasocial.ui.pedidos.PedidosListView
 import com.example.lojasocial.ui.pedidos.PedidoDetalhesView
 //Import Entregas
 import com.example.lojasocial.ui.entrega.CriarEntregaView
@@ -38,7 +38,6 @@ import com.example.lojasocial.ui.entrega.EntregaDetalhesView
 import com.example.lojasocial.ui.entrega.EntregasListView
 // Outros Imports
 import com.example.lojasocial.ui.login.LoginView
-import com.example.lojasocial.ui.profile.ProfileView
 import com.example.lojasocial.ui.theme.LojaSocialTheme
 import com.example.lojasocial.ui.welcome.WelcomeView
 import dagger.hilt.android.AndroidEntryPoint
@@ -64,7 +63,6 @@ class MainActivity : ComponentActivity() {
                         // --- Auth / Welcome ---
                         composable("login") { LoginView(navController) }
                         composable("welcome") { WelcomeView(navController) }
-                        composable("profile") { ProfileView(navController) }
 
                         // --- Campanhas ---
                         composable("campanhas") { CampanhasView(navController) }
@@ -115,8 +113,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         // --- Pedidos ---
-                        composable("pedidos/novos") {
-                            NovosPedidosListView(navController)
+                        composable("pedidos") {
+                            PedidosListView(navController)
                         }
 
                         composable(

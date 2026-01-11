@@ -1,27 +1,20 @@
 package com.example.lojasocial.ui.beneficiario
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.lojasocial.R
+import com.example.lojasocial.ui.components.TopBarVoltar
 
 private val BgGreen = Color(0xFF0B3B2E)
 private val IpcaButtonGreen = Color(0xFF1F6F43)
@@ -55,19 +48,15 @@ fun EditarBeneficiarioView(
 
     Box(modifier = Modifier.fillMaxSize().background(BgGreen)) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
-            // Cabeçalho
-            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.align(Alignment.CenterStart)) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = WhiteColor)
-                }
-                Image(painter = painterResource(id = R.drawable.logo), contentDescription = null, modifier = Modifier.height(50.dp).align(Alignment.Center).clickable { navController.navigate("welcome") }, contentScale = ContentScale.Fit)
-            }
+
+            // --- NAVBAR VOLTAR ---
+            TopBarVoltar(navController = navController, title = "Editar Perfil")
+
+            Divider(color = Color(0xFF2C6B55))
 
             Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).verticalScroll(rememberScrollState())) {
                 Spacer(Modifier.height(16.dp))
-                Text("Editar Perfil", style = MaterialTheme.typography.headlineMedium, color = WhiteColor, fontWeight = FontWeight.Bold)
 
-                Spacer(Modifier.height(32.dp))
                 BeneficiarioTextField(nome, { nome = it }, "Nome")
                 Spacer(Modifier.height(16.dp))
                 BeneficiarioTextField(nif, { nif = it }, "NIF")

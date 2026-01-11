@@ -19,6 +19,7 @@ data class PedidoDetalhesState(
     val isLoading: Boolean = true,
     val pedido: Pedido? = null,
     val nomeBeneficiario: String? = "",
+    val emailBeneficiario: String? = "", // NOVO CAMPO
     val error: String? = null
 )
 
@@ -47,13 +48,13 @@ class PedidoDetalhesViewModel @Inject constructor(
                     return@launch
                 }
 
-
                 when (val resultado = beneficiarioRepository.obterBeneficiario(pedido.beneficiarioId)) {
                     is ResultWrapper.Success -> {
                         _uiState.value = PedidoDetalhesState(
                             isLoading = false,
                             pedido = pedido,
-                            nomeBeneficiario = resultado.value.nome
+                            nomeBeneficiario = resultado.value.nome,
+                            emailBeneficiario = resultado.value.email // PREENCHER O EMAIL
                         )
                     }
                     is ResultWrapper.Error -> {
@@ -61,6 +62,7 @@ class PedidoDetalhesViewModel @Inject constructor(
                             isLoading = false,
                             pedido = pedido,
                             nomeBeneficiario = "Desconhecido",
+                            emailBeneficiario = "",
                             error = resultado.message
                         )
                     }
@@ -98,9 +100,7 @@ class PedidoDetalhesViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             try {
-
                 val pedido = pedidoRepository.getPedidoById(pedidoId) ?: return@launch
-
 
                 val novaEntrega = Entrega(
                     beneficiarioId = pedido.beneficiarioId,
