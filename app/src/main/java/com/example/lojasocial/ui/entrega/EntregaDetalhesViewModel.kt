@@ -37,15 +37,25 @@ class EntregaDetalhesViewModel @Inject constructor(
     var erro = mutableStateOf<String?>(null)
         private set
 
+    // -------- NOVOS CAMPOS --------
+    var estadoSelecionado = mutableStateOf(EntregaStatus.EM_ANDAMENTO)
+        private set
+
+    var dataEntrega = mutableStateOf<Long?>(null)
+        private set
+
     private val _produtosDisponiveis = MutableStateFlow<List<Produto>>(emptyList())
     val produtosDisponiveis: StateFlow<List<Produto>> = _produtosDisponiveis
 
-    // ---------------- Carregar Entrega ----------------
+    // -------- CARREGAR ENTREGA --------
     fun carregarEntrega(entregaId: String) {
         viewModelScope.launch {
             try {
                 val e = entregaRepository.getEntregaById(entregaId) ?: return@launch
                 entrega.value = e
+
+                estadoSelecionado.value = e.status
+                dataEntrega.value = e.dataEntrega
 
                 e.beneficiarioId?.let {
                     when (val r = beneficiarioRepository.obterBeneficiario(it)) {
@@ -62,67 +72,53 @@ class EntregaDetalhesViewModel @Inject constructor(
 
                 carregarProdutosInventario()
 
-            } catch (ex: Exception) {
-                erro.value = ex.message
+            } catch (e: Exception) {
+                erro.value = e.message
             }
         }
     }
 
-    // ---------------- Inventário REAL (por lotes) ----------------
+    // -------- INVENTÁRIO --------
     private fun carregarProdutosInventario() {
         viewModelScope.launch {
             produtoRepository.getProdutos().collectLatest { result ->
                 if (result is ResultWrapper.Success) {
-
-                    val produtosComStock = mutableListOf<Produto>()
+                    val lista = mutableListOf<Produto>()
 
                     result.value.forEach { produto ->
-                        val produtoId = produto.id ?: return@forEach
-
-                        produtoRepository.observeLotes(produtoId)
-                            .collectLatest { loteResult ->
-                                if (loteResult is ResultWrapper.Success) {
-                                    val stock = loteResult.value.sumOf { it.quantidade }
-
-                                    if (stock > 0) {
-                                        produtosComStock.add(
-                                            produto.copy(quantidadeTotal = stock)
-                                        )
-                                    }
+                        val id = produto.id ?: return@forEach
+                        produtoRepository.observeLotes(id).collectLatest { lotes ->
+                            if (lotes is ResultWrapper.Success) {
+                                val stock = lotes.value.sumOf { it.quantidade }
+                                if (stock > 0) {
+                                    lista.add(produto.copy(quantidadeTotal = stock))
                                 }
                             }
+                        }
                     }
-
-                    _produtosDisponiveis.value = produtosComStock
+                    _produtosDisponiveis.value = lista
                 }
             }
         }
     }
 
-    // ---------------- Produtos da Entrega ----------------
+    // -------- ITENS DA ENTREGA --------
     fun adicionarProduto(produto: Produto, quantidade: Int) {
         val atual = entrega.value ?: return
-
         val itens = atual.itens.toMutableList()
+
         val index = itens.indexOfFirst { it.produtoId == produto.id }
-
         if (index >= 0) {
-            val item = itens[index]
-            val qtdAtual = item.lotesConsumidos.sumOf { it.quantidade }
-
-            itens[index] = item.copy(
-                lotesConsumidos = listOf(
-                    LoteConsumido("manual", qtdAtual + quantidade)
-                )
+            val atualQtd = itens[index].lotesConsumidos.sumOf { it.quantidade }
+            itens[index] = itens[index].copy(
+                lotesConsumidos = listOf(LoteConsumido("manual", atualQtd + quantidade))
             )
         } else {
             itens.add(
                 ItemEntrega(
-                    produtoId = produto.id ?: "",
+                    produtoId = produto.id!!,
                     produtoNome = produto.nome,
-                    lotesConsumidos = listOf(
-                        LoteConsumido("manual", quantidade)
-                    )
+                    lotesConsumidos = listOf(LoteConsumido("manual", quantidade))
                 )
             )
         }
@@ -130,74 +126,18 @@ class EntregaDetalhesViewModel @Inject constructor(
         entrega.value = atual.copy(itens = itens)
     }
 
-    private suspend fun consumirLotesProduto(
-        produtoId: String,
-        quantidadeNecessaria: Int
-    ) {
-        var quantidadeRestante = quantidadeNecessaria
-
-        val resultado = produtoRepository.observeLotes(produtoId)
-            .first { it !is ResultWrapper.Loading }
-
-        if (resultado !is ResultWrapper.Success) {
-            throw Exception("Erro ao carregar lotes")
-        }
-
-        val lotesOrdenados = resultado.value
-            .sortedWith(
-                compareBy<LoteStock> {
-                    it.dataValidade == null // null vai para o fim
-                }.thenBy {
-                    it.dataValidade
-                }
-            )
-
-        val stockTotal = lotesOrdenados.sumOf { it.quantidade }
-        if (stockTotal < quantidadeNecessaria) {
-            throw Exception("Stock insuficiente para concluir a entrega")
-        }
-
-        for (lote in lotesOrdenados) {
-            if (quantidadeRestante <= 0) break
-
-            val consumir = minOf(lote.quantidade, quantidadeRestante)
-            val novaQuantidade = lote.quantidade - consumir
-
-            if (novaQuantidade == 0) {
-                produtoRepository.eliminarLote(produtoId, lote.id!!)
-            } else {
-                produtoRepository.atualizarQuantidadeLote(
-                    produtoId,
-                    lote.id!!,
-                    novaQuantidade
-                )
-            }
-
-            quantidadeRestante -= consumir
-        }
-    }
-
-    fun aumentarQuantidade(produtoId: String) {
-        alterarQuantidade(produtoId, +1)
-    }
-
-    fun diminuirQuantidade(produtoId: String) {
-        alterarQuantidade(produtoId, -1)
-    }
+    fun aumentarQuantidade(produtoId: String) = alterarQuantidade(produtoId, +1)
+    fun diminuirQuantidade(produtoId: String) = alterarQuantidade(produtoId, -1)
 
     private fun alterarQuantidade(produtoId: String, delta: Int) {
         val atual = entrega.value ?: return
 
-        val novosItens = atual.itens.mapNotNull { item ->
-            if (item.produtoId == produtoId) {
-                val novaQtd = item.lotesConsumidos.sumOf { it.quantidade } + delta
+        val novosItens = atual.itens.mapNotNull {
+            if (it.produtoId == produtoId) {
+                val novaQtd = it.lotesConsumidos.sumOf { l -> l.quantidade } + delta
                 if (novaQtd <= 0) null
-                else item.copy(
-                    lotesConsumidos = listOf(
-                        LoteConsumido("manual", novaQtd)
-                    )
-                )
-            } else item
+                else it.copy(lotesConsumidos = listOf(LoteConsumido("manual", novaQtd)))
+            } else it
         }
 
         entrega.value = atual.copy(itens = novosItens)
@@ -208,47 +148,91 @@ class EntregaDetalhesViewModel @Inject constructor(
         entrega.value = atual.copy(itens = atual.itens.filterNot { it.produtoId == produtoId })
     }
 
-    // ---------------- Guardar ----------------
-    fun salvarAlteracoes(onSuccess: () -> Unit) {
-        viewModelScope.launch {
-            entrega.value?.let {
-                entregaRepository.atualizarEntrega(it)
-                onSuccess()
-            }
-        }
+    // -------- ALTERAR ESTADO / DATA --------
+    fun alterarEstado(novo: EntregaStatus) {
+        estadoSelecionado.value = novo
     }
 
-    // ---------------- Terminar Entrega + Pedido ----------------
-    fun marcarComoTerminada(onSuccess: () -> Unit) {
+    fun alterarData(novaData: Long) {
+        dataEntrega.value = novaData
+    }
+
+    // -------- GUARDAR --------
+    fun guardar(onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 val e = entrega.value ?: return@launch
 
-
-                e.itens.forEach { item ->
-                    val quantidade = item.lotesConsumidos.sumOf { it.quantidade }
-                    consumirLotesProduto(item.produtoId, quantidade)
+                // Consome stock apenas se mudou para ENTREGUE
+                if (
+                    estadoSelecionado.value == EntregaStatus.ENTREGUE &&
+                    e.status != EntregaStatus.ENTREGUE
+                ) {
+                    e.itens.forEach { item ->
+                        consumirLotesProduto(
+                            item.produtoId,
+                            item.lotesConsumidos.sumOf { it.quantidade }
+                        )
+                    }
                 }
 
-
+                // Atualiza pedido
                 e.pedidoId?.let { pedidoId ->
-                    pedidoRepository.atualizarStatus(
-                        pedidoId,
-                        PedidoStatus.TERMINADO
-                    )
+                    val statusPedido = when (estadoSelecionado.value) {
+                        EntregaStatus.PRONTO -> PedidoStatus.PRONTO
+                        EntregaStatus.ENTREGUE -> PedidoStatus.ENTREGUE
+                        else -> PedidoStatus.EM_ANDAMENTO
+                    }
+                    pedidoRepository.atualizarStatus(pedidoId, statusPedido)
                 }
 
-
-                entregaRepository.atualizarEntrega(
-                    e.copy(status = EntregaStatus.TERMINADO)
+                val atualizada = e.copy(
+                    status = estadoSelecionado.value,
+                    dataEntrega = dataEntrega.value
                 )
+
+                entregaRepository.atualizarEntrega(atualizada)
+                entrega.value = atualizada
 
                 onSuccess()
 
-            } catch (ex: Exception) {
-                erro.value = ex.message
+            } catch (e: Exception) {
+                erro.value = e.message
             }
         }
     }
-}
 
+    // -------- CONSUMO DE LOTES --------
+    private suspend fun consumirLotesProduto(produtoId: String, qtd: Int) {
+        var restante = qtd
+
+        val resultado = produtoRepository.observeLotes(produtoId)
+            .first { it !is ResultWrapper.Loading }
+
+        if (resultado !is ResultWrapper.Success) {
+            throw Exception("Erro ao carregar stock")
+        }
+
+        val lotes = resultado.value.sortedWith(
+            compareBy<LoteStock> { it.dataValidade == null }.thenBy { it.dataValidade }
+        )
+
+        if (lotes.sumOf { it.quantidade } < qtd) {
+            throw Exception("Stock insuficiente")
+        }
+
+        for (lote in lotes) {
+            if (restante <= 0) break
+
+            val consumir = minOf(lote.quantidade, restante)
+            val novaQtd = lote.quantidade - consumir
+
+            if (novaQtd == 0)
+                produtoRepository.eliminarLote(produtoId, lote.id!!)
+            else
+                produtoRepository.atualizarQuantidadeLote(produtoId, lote.id!!, novaQtd)
+
+            restante -= consumir
+        }
+    }
+}

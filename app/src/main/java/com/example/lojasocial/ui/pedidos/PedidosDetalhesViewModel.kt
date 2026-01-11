@@ -11,6 +11,9 @@ import com.example.lojasocial.repositories.ResultWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.lojasocial.models.Entrega
+import com.example.lojasocial.models.EntregaStatus
+import com.example.lojasocial.repositories.EntregaRepository
 
 data class PedidoDetalhesState(
     val isLoading: Boolean = true,
@@ -22,7 +25,8 @@ data class PedidoDetalhesState(
 @HiltViewModel
 class PedidoDetalhesViewModel @Inject constructor(
     private val pedidoRepository: PedidoRepository,
-    private val beneficiarioRepository: BeneficiarioRepository
+    private val beneficiarioRepository: BeneficiarioRepository,
+    private val entregaRepository: EntregaRepository
 ) : ViewModel() {
 
     private val _uiState = mutableStateOf(PedidoDetalhesState())
@@ -49,7 +53,7 @@ class PedidoDetalhesViewModel @Inject constructor(
                         _uiState.value = PedidoDetalhesState(
                             isLoading = false,
                             pedido = pedido,
-                            nomeBeneficiario = resultado.value.nome // ou outra propriedade do beneficiário
+                            nomeBeneficiario = resultado.value.nome
                         )
                     }
                     is ResultWrapper.Error -> {
@@ -76,15 +80,28 @@ class PedidoDetalhesViewModel @Inject constructor(
 
     fun aceitarPedido(
         pedidoId: String,
-        onNavigateToEntrega: (beneficiarioId: String, pedidoId: String) -> Unit
+        onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
-            val pedido = pedidoRepository.getPedidoById(pedidoId) ?: return@launch
+            try {
 
-            pedidoRepository.aceitarPedido(pedidoId)
+                val pedido = pedidoRepository.getPedidoById(pedidoId) ?: return@launch
 
 
-            onNavigateToEntrega(pedido.beneficiarioId, pedido.id!!)
+                val novaEntrega = Entrega(
+                    beneficiarioId = pedido.beneficiarioId,
+                    pedidoId = pedidoId,
+                    itens = emptyList(),
+                    status = EntregaStatus.EM_ANDAMENTO
+                )
+
+                entregaRepository.criarEntrega(novaEntrega)
+                pedidoRepository.aceitarPedido(pedidoId)
+
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Erro ao aceitar pedido: ${e.message}")
+            }
         }
     }
 

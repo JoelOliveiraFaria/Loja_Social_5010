@@ -2,7 +2,8 @@ package com.example.lojasocial.models
 
 enum class EntregaStatus {
     EM_ANDAMENTO,
-    TERMINADO
+    PRONTO,
+    ENTREGUE
 }
 
 data class Entrega(
@@ -11,6 +12,7 @@ data class Entrega(
     val pedidoId: String? = null,
     val itens: List<ItemEntrega> = emptyList(),
     val status: EntregaStatus = EntregaStatus.EM_ANDAMENTO,
+    val dataEntrega: Long? = null,
     val dataCriacao: Long = System.currentTimeMillis()
 )
 

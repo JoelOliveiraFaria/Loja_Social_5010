@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 
 @HiltViewModel
 class EntregasListViewModel @Inject constructor(
@@ -19,14 +22,25 @@ class EntregasListViewModel @Inject constructor(
     private val beneficiarioRepository: BeneficiarioRepository
 ) : ViewModel() {
 
-    val entregas = entregaRepository
-        .getEntregasPorStatus(EntregaStatus.EM_ANDAMENTO)
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList()
-        )
+    private val _filtroStatus = MutableStateFlow<EntregaStatus?>(EntregaStatus.EM_ANDAMENTO)
+    val filtroStatus: StateFlow<EntregaStatus?> = _filtroStatus
 
+
+    val entregas = _filtroStatus.flatMapLatest { status ->
+        if (status == null) {
+            entregaRepository.getEntregasPorStatus(EntregaStatus.EM_ANDAMENTO)
+        } else {
+            entregaRepository.getEntregasPorStatus(status)
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        emptyList()
+    )
+
+    fun alterarFiltro(novoStatus: EntregaStatus?) {
+        _filtroStatus.value = novoStatus
+    }
     private val _nomesBeneficiarios = mutableStateMapOf<String, String>()
     val nomesBeneficiarios: Map<String, String> = _nomesBeneficiarios
 

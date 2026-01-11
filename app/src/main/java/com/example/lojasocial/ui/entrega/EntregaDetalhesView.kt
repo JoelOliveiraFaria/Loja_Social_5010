@@ -1,7 +1,6 @@
 package com.example.lojasocial.ui.entrega
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.app.DatePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,22 +15,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.lojasocial.models.EntregaStatus
-import com.example.lojasocial.models.Produto
 import com.example.lojasocial.models.ItemEntrega
+import com.example.lojasocial.models.Produto
 import com.example.lojasocial.ui.components.TopBarWithMenu
-import androidx.compose.ui.Alignment.Companion.CenterVertically
-import androidx.compose.ui.Alignment.Companion.Center
-import androidx.compose.foundation.layout.Arrangement
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
-// Cores
+// -------- CORES --------
 private val BgGreen = Color(0xFF0B3B2E)
 private val LineGreen = Color(0xFF2C6B55)
 private val ButtonGreen = Color(0xFF1F6F43)
@@ -39,7 +38,6 @@ private val ButtonGreenLight = Color(0xFF2C6B55)
 private val CardGreen = Color(0xFF1F6F43)
 private val TextWhite = Color.White
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EntregaDetalhesView(
     navController: NavController,
@@ -47,30 +45,30 @@ fun EntregaDetalhesView(
     viewModel: EntregaDetalhesViewModel = hiltViewModel()
 ) {
     var mostrarDialog by remember { mutableStateOf(false) }
-    var produtoSelecionado by remember { mutableStateOf<Produto?>(null) }
-    var quantidade by remember { mutableStateOf("") }
+    var dropdownEstado by remember { mutableStateOf(false) }
+    var mostrarDatePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.carregarEntrega(entregaId)
     }
 
     val entrega by viewModel.entrega
-    val produtos by viewModel.produtosDisponiveis.collectAsState()
-    val bloqueado = entrega?.status == EntregaStatus.TERMINADO
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BgGreen)
     ) {
+
+        // -------- TOPBAR --------
         TopBarWithMenu(navController)
         Divider(color = LineGreen)
 
-
+        // -------- HEADER --------
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, top = 16.dp, bottom = 24.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { navController.popBackStack() }) {
@@ -81,7 +79,9 @@ fun EntregaDetalhesView(
                     modifier = Modifier.size(28.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
+
+            Spacer(Modifier.width(12.dp))
+
             Text(
                 text = "Detalhes da Entrega",
                 color = TextWhite,
@@ -90,6 +90,7 @@ fun EntregaDetalhesView(
             )
         }
 
+        // -------- CONTEÚDO --------
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,18 +101,17 @@ fun EntregaDetalhesView(
                 text = "Beneficiário: ${viewModel.nomeBeneficiario.value}",
                 color = TextWhite,
                 fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
+                fontWeight = FontWeight.Bold
             )
-            if (viewModel.textoPedido.value.isNotBlank()) {
-                Text(
-                    text = "Pedido: ${viewModel.textoPedido.value}",
-                    color = TextWhite,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
-            }
 
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = "Pedido: ${viewModel.textoPedido.value}",
+                color = TextWhite
+            )
+
+            Spacer(Modifier.height(16.dp))
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
@@ -120,7 +120,7 @@ fun EntregaDetalhesView(
                 items(entrega?.itens ?: emptyList()) { item ->
                     CardItemEntrega(
                         item = item,
-                        bloqueado = bloqueado,
+                        bloqueado = viewModel.estadoSelecionado.value == EntregaStatus.ENTREGUE,
                         onDiminuir = { viewModel.diminuirQuantidade(item.produtoId) },
                         onAumentar = { viewModel.aumentarQuantidade(item.produtoId) },
                         onRemover = { viewModel.removerProduto(item.produtoId) }
@@ -128,117 +128,174 @@ fun EntregaDetalhesView(
                 }
             }
 
-            Button(
-                onClick = { mostrarDialog = true },
-                enabled = !bloqueado,
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(bottom = 8.dp)
-            ) {
-                Text("Adicionar Produto", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            }
+            Spacer(Modifier.height(16.dp))
 
-            Button(
-                onClick = { viewModel.salvarAlteracoes { navController.popBackStack() } },
-                enabled = !bloqueado,
-                colors = ButtonDefaults.buttonColors(containerColor = CardGreen),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(bottom = 8.dp)
+            // -------- ESTADO + DATA (FIXADO) --------
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Guardar Alterações", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            }
 
-            if (!bloqueado) {
+                // ESTADO
+                Box(modifier = Modifier.weight(1f)) {
+                    Button(
+                        onClick = { dropdownEstado = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen)
+                    ) {
+                        Text(
+                            viewModel.estadoSelecionado.value.name,
+                            color = TextWhite,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = dropdownEstado,
+                        onDismissRequest = { dropdownEstado = false },
+                        modifier = Modifier.background(BgGreen)
+                    ) {
+                        listOf(
+                            EntregaStatus.EM_ANDAMENTO,
+                            EntregaStatus.PRONTO,
+                            EntregaStatus.ENTREGUE
+                        ).forEach { estado ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        estado.name,
+                                        color = TextWhite,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                },
+                                onClick = {
+                                    dropdownEstado = false
+                                    viewModel.alterarEstado(estado)
+                                }
+                            )
+                            Divider(color = LineGreen)
+                        }
+                    }
+                }
+
+                // DATA
                 Button(
-                    onClick = { viewModel.marcarComoTerminada { navController.popBackStack() } },
-                    colors = ButtonDefaults.buttonColors(containerColor = CardGreen),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
+                    onClick = { mostrarDatePicker = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen)
                 ) {
-                    Text("Marcar como Terminada", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Text(
+                        viewModel.dataEntrega.value?.let {
+                            SimpleDateFormat(
+                                "dd/MM/yyyy",
+                                Locale.getDefault()
+                            ).format(Date(it))
+                        } ?: "Data",
+                        color = TextWhite
+                    )
                 }
             }
+
+            Spacer(Modifier.height(16.dp))
+
+            // -------- ADICIONAR PRODUTO --------
+            Button(
+                onClick = { mostrarDialog = true },
+                enabled = viewModel.estadoSelecionado.value != EntregaStatus.ENTREGUE,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ButtonGreen,
+                    disabledContainerColor = ButtonGreenLight.copy(alpha = 0.5f)
+                )
+            ) {
+                Text(
+                    "Adicionar Produto",
+                    color = TextWhite,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // -------- GUARDAR --------
+            Button(
+                onClick = { viewModel.guardar { navController.popBackStack() } },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CardGreen)
+            ) {
+                Text(
+                    "Guardar",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextWhite
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 
+    // -------- DATE PICKER --------
+    if (mostrarDatePicker) {
+        val context = LocalContext.current
+        val cal = Calendar.getInstance()
+
+        val picker = DatePickerDialog(
+            context,
+            { _, y, m, d ->
+                cal.set(y, m, d)
+                viewModel.alterarData(cal.timeInMillis)
+                mostrarDatePicker = false
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        )
+
+        picker.setOnDismissListener { mostrarDatePicker = false }
+        picker.show()
+    }
+
+    // -------- DIALOG PARA ADICIONAR PRODUTO --------
     if (mostrarDialog) {
-        Dialog(onDismissRequest = { mostrarDialog = false }) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = BgGreen),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp)
-                ) {
-                    Text(
-                        "Adicionar Produto",
-                        color = TextWhite,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 20.dp)
-                    )
+        val produtos by viewModel.produtosDisponiveis.collectAsState()
 
-                    produtos.forEach { produto ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { produtoSelecionado = produto }
-                                .padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = ButtonGreenLight)
-                        ) {
-                            Text(
-                                text = "${produto.nome} (${produto.quantidadeTotal})",
-                                color = TextWhite,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                    }
-
-                    if (produtoSelecionado != null) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        OutlinedTextField(
-                            value = quantidade,
-                            onValueChange = { quantidade = it },
-                            label = { Text("Quantidade", color = TextWhite.copy(alpha = 0.8f)) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = LineGreen,
-                                unfocusedBorderColor = ButtonGreenLight,
-                                focusedTextColor = TextWhite,
-                                unfocusedTextColor = TextWhite
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(horizontalArrangement = Arrangement.End) {
-                            TextButton(onClick = { mostrarDialog = false }) {
-                                Text("Cancelar", color = LineGreen)
-                            }
-                            Button(
-                                onClick = {
-                                    quantidade.toIntOrNull()?.let { q ->
-                                        viewModel.adicionarProduto(produtoSelecionado!!, q)
-                                    }
+        AlertDialog(
+            onDismissRequest = { mostrarDialog = false },
+            containerColor = BgGreen,
+            title = { Text("Selecionar Produto", color = TextWhite) },
+            text = {
+                Box(modifier = Modifier.heightIn(max = 400.dp)) {
+                    LazyColumn {
+                        items(produtos) { produto ->
+                            ListItem(
+                                headlineContent = { Text(produto.nome.toString(), color = TextWhite) },
+                                supportingContent = { Text("Stock: ${produto.quantidadeTotal}", color = TextWhite.copy(0.7f)) },
+                                modifier = androidx.compose.ui.Modifier.clickable {
+                                    viewModel.adicionarProduto(produto, 1)
                                     mostrarDialog = false
-                                    produtoSelecionado = null
-                                    quantidade = ""
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen)
-                            ) {
-                                Text("Confirmar")
-                            }
+                                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                            )
+                            Divider(color = LineGreen)
                         }
                     }
                 }
+            },
+            confirmButton = {
+                TextButton(onClick = { mostrarDialog = false }) {
+                    Text("Fechar", color = TextWhite)
+                }
             }
-        }
+        )
     }
 }
 
+// -------- CARD ITEM --------
 @Composable
 private fun CardItemEntrega(
     item: ItemEntrega,
@@ -257,57 +314,52 @@ private fun CardItemEntrega(
                 text = item.produtoNome ?: "",
                 color = TextWhite,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
+                fontWeight = FontWeight.Bold
             )
+
+            Spacer(Modifier.height(12.dp))
+
             Row(
-                verticalAlignment = CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
                     onClick = onDiminuir,
                     enabled = !bloqueado,
+                    modifier = Modifier.size(48.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ButtonGreen,
                         disabledContainerColor = ButtonGreenLight.copy(alpha = 0.5f)
-                    ),
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Text("-", fontSize = 20.sp, color = TextWhite)
-                }
+                    )
+                ) { Text("-", color = TextWhite, fontSize = 20.sp) }
+
                 Text(
-                    text = item.lotesConsumidos.sumOf { it.quantidade }.toString(),
+                    item.lotesConsumidos.sumOf { it.quantidade }.toString(),
                     color = TextWhite,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    fontWeight = FontWeight.Bold
                 )
+
                 Button(
                     onClick = onAumentar,
                     enabled = !bloqueado,
+                    modifier = Modifier.size(48.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ButtonGreen,
                         disabledContainerColor = ButtonGreenLight.copy(alpha = 0.5f)
-                    ),
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Text("+", fontSize = 20.sp, color = TextWhite)
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                IconButton(
-                    onClick = onRemover,
-                    enabled = !bloqueado
-                ) {
+                    )
+                ) { Text("+", color = TextWhite, fontSize = 20.sp) }
+
+                Spacer(Modifier.weight(1f))
+
+                IconButton(onClick = onRemover, enabled = !bloqueado) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Remover",
-                        tint = if (!bloqueado) Color.Red else Color.Red.copy(alpha = 0.5f),
-                        modifier = Modifier.size(24.dp)
+                        tint = Color.Red
                     )
                 }
             }
         }
     }
 }
-
-

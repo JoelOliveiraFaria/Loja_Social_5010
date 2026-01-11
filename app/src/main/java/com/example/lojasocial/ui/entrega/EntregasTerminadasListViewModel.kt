@@ -20,7 +20,7 @@ class EntregasTerminadasListViewModel @Inject constructor(
 ) : ViewModel() {
 
     val entregas = entregaRepository
-        .getEntregasPorStatus(EntregaStatus.TERMINADO)
+        .getEntregasPorStatus(EntregaStatus.PRONTO)
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),

@@ -155,8 +155,8 @@ fun PedidoDetalhesView(
 
                 Button(
                     onClick = {
-                        viewModel.aceitarPedido(pedidoId) { beneficiarioId, pedidoId ->
-                            navController.navigate("entrega/$beneficiarioId/$pedidoId")
+                        viewModel.aceitarPedido(pedidoId) {
+                            navController.popBackStack()
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),

@@ -12,6 +12,7 @@ data class Pedido(
 enum class PedidoStatus {
     NOVO,
     EM_ANDAMENTO,
-    TERMINADO,
-    RECUSADO
+    PRONTO,
+    RECUSADO,
+    ENTREGUE
 }
