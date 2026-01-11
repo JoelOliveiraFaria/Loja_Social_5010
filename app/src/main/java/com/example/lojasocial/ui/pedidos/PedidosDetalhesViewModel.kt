@@ -78,6 +78,20 @@ class PedidoDetalhesViewModel @Inject constructor(
         }
     }
 
+    fun verificarEaceitar(pedidoId: String, onAvisoEntregaAtiva: () -> Unit, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val pedido = _uiState.value.pedido ?: return@launch
+
+            val temAtiva = entregaRepository.temEntregaAtiva(pedido.beneficiarioId)
+
+            if (temAtiva) {
+                onAvisoEntregaAtiva()
+            } else {
+                aceitarPedido(pedidoId, onSuccess)
+            }
+        }
+    }
+
     fun aceitarPedido(
         pedidoId: String,
         onSuccess: () -> Unit

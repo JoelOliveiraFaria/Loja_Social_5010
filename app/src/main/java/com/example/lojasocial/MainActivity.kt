@@ -30,14 +30,12 @@ import com.example.lojasocial.ui.produtos.CriarProdutoView
 import com.example.lojasocial.ui.produtos.ProdutosView
 import com.example.lojasocial.ui.produtos.DetalhesProdutoView
 //Imports Pedidos
-import com.example.lojasocial.ui.pedidos.PedidosView
 import com.example.lojasocial.ui.pedidos.NovosPedidosListView
 import com.example.lojasocial.ui.pedidos.PedidoDetalhesView
 //Import Entregas
 import com.example.lojasocial.ui.entrega.CriarEntregaView
 import com.example.lojasocial.ui.entrega.EntregaDetalhesView
 import com.example.lojasocial.ui.entrega.EntregasListView
-import com.example.lojasocial.ui.entrega.EntregasTerminadasListView
 // Outros Imports
 import com.example.lojasocial.ui.login.LoginView
 import com.example.lojasocial.ui.profile.ProfileView
@@ -92,7 +90,7 @@ class MainActivity : ComponentActivity() {
                             EditarBeneficiarioView(navController, id)
                         }
 
-                        // --- Inventário (Corrigido) ---
+                        // --- Inventário ---
                         composable("inventario") {
                             ProdutosView(navController)
                         }
@@ -101,7 +99,6 @@ class MainActivity : ComponentActivity() {
                             CriarProdutoView(navController)
                         }
 
-                        // Rota de Detalhes do Produto - Resolva o crash ao carregar no produto
                         composable(
                             route = "inventario/{produtoId}",
                             arguments = listOf(navArgument("produtoId") { type = NavType.StringType })
@@ -113,10 +110,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         // --- Pedidos ---
-                        composable("pedidos") {
-                            PedidosView(navController)
-                        }
-
                         composable("pedidos/novos") {
                             NovosPedidosListView(navController)
                         }
@@ -130,17 +123,11 @@ class MainActivity : ComponentActivity() {
                         }
 
                         // --- Entregas ---
-                        composable("entregas/andamento") {
+                        composable("entregas") {
                             EntregasListView(navController)
                         }
 
-                        composable("entregas/terminados") {
-                            EntregasTerminadasListView(navController)
-                        }
-
-                        // --- Criar entrega sem pedido (botão "Criar entrega" direto) ---
                         composable("entrega/novo") {
-                            // Beneficiário será selecionado manualmente dentro da view
                             CriarEntregaView(
                                 navController = navController,
                                 beneficiarioId = null,
@@ -148,7 +135,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // --- Criar entrega a partir de um pedido existente ---
                         composable(
                             route = "entrega/{beneficiarioId}/{pedidoId}",
                             arguments = listOf(
@@ -159,7 +145,6 @@ class MainActivity : ComponentActivity() {
                             val beneficiarioId = backStackEntry.arguments?.getString("beneficiarioId")
                             val pedidoId = backStackEntry.arguments?.getString("pedidoId")
 
-                            // CriarEntregaView já vai preencher os campos automaticamente a partir do pedido
                             CriarEntregaView(
                                 navController = navController,
                                 beneficiarioId = beneficiarioId,
@@ -167,7 +152,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // Detalhes da entrega
                         composable(
                             route = "entrega/detalhes/{entregaId}",
                             arguments = listOf(navArgument("entregaId") { type = NavType.StringType })

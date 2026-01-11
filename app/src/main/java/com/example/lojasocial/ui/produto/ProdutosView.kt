@@ -17,17 +17,19 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.lojasocial.ui.components.TopBarWithMenu
 
+private val LineGreen = Color(0xFF2C6B55)
+
 @Composable
 fun ProdutosView(navController: NavController, viewModel: ProdutosViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0B3B2E))) {
         TopBarWithMenu(navController)
+        Divider(color = LineGreen)
         Text("Inventário", color = Color.White, fontSize = 32.sp, modifier = Modifier.padding(16.dp), fontWeight = FontWeight.Bold)
 
         LazyColumn(modifier = Modifier.weight(1f).padding(horizontal = 16.dp)) {
             items(state.itens) { produto ->
-                // Alerta vermelho se houver pelo menos um lote expirado
                 val temExpirados = (state.lotesPorProduto[produto.id] ?: emptyList()).any {
                     it.dataValidade != null && it.dataValidade!! < viewModel.getHojeStr()
                 }

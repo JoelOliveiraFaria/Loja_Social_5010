@@ -2,6 +2,7 @@ package com.example.lojasocial.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -76,19 +77,19 @@ fun TopBarWithMenu(navController: NavController) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(id = R.drawable.logo_sas),
-            contentDescription = "Serviços de Ação Social",
-            modifier = Modifier.height(42.dp)
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo",
+            modifier = Modifier
+                .height(45.dp)
+                .clickable { navController.navigate("welcome") }
         )
-
-        Spacer(Modifier.width(12.dp))
 
         Spacer(Modifier.weight(1f))
 
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .background(MenuCircle, CircleShape),
+                .background(Color(0xFF0F4A3A), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { expanded = true }) {
@@ -121,30 +122,29 @@ fun TopBarWithMenu(navController: NavController) {
                 Divider(color = Color(0xFF2C6B55))
 
                 DropdownMenuItem(
+                    text = { Text("Pedidos", color = MenuTextColor) },
+                    onClick = {
+                        expanded = false
+                        navController.navigate("pedidos/novos")
+                    }
+                )
+                Divider(color = Color(0xFF2C6B55))
+
+
+                DropdownMenuItem(
+                    text = { Text("Entregas", color = MenuTextColor) },
+                    onClick = {
+                        expanded = false
+                        navController.navigate("entregas")
+                    }
+                )
+                Divider(color = Color(0xFF2C6B55))
+
+                DropdownMenuItem(
                     text = { Text("Campanhas", color = MenuTextColor) },
                     onClick = {
                         expanded = false
                         navController.navigate("campanhas")
-                    }
-                )
-
-                Divider(color = Color(0xFF2C6B55))
-
-                DropdownMenuItem(
-                    text = { Text("Pedidos/Entregas", color = MenuTextColor) },
-                    onClick = {
-                        expanded = false
-                        navController.navigate("pedidos")
-                    }
-                )
-
-                Divider(color = Color(0xFF2C6B55))
-
-                DropdownMenuItem(
-                    text = { Text("Perfil", color = MenuTextColor) },
-                    onClick = {
-                        expanded = false
-                        navController.navigate("profile")
                     }
                 )
 

@@ -7,7 +7,7 @@ interface EntregaRepository {
     suspend fun criarEntrega(entrega: Entrega): String // retorna id criado
     suspend fun atualizarEntrega(entrega: Entrega)
     suspend fun getEntregaById(entregaId: String): Entrega?
-
+    suspend fun temEntregaAtiva(beneficiarioId: String): Boolean
     fun getEntregasPorStatus(status: EntregaStatus): Flow<List<Entrega>>
 }
 

@@ -33,6 +33,15 @@ class EntregaRepositoryFirestore @Inject constructor(
         return doc.toObject(Entrega::class.java)?.copy(id = doc.id)
     }
 
+    override suspend fun temEntregaAtiva(beneficiarioId: String): Boolean {
+        val snapshot = entregasCollection
+            .whereEqualTo("beneficiarioId", beneficiarioId)
+            .whereIn("status", listOf("EM_ANDAMENTO", "PRONTO"))
+            .get()
+            .await()
+        return !snapshot.isEmpty
+    }
+
     override fun getEntregasPorStatus(
         status: EntregaStatus
     ): Flow<List<Entrega>> = callbackFlow {
