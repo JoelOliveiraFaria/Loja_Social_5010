@@ -78,14 +78,19 @@ class MainActivity : ComponentActivity() {
                             EditarCampanhaView(navController, id)
                         }
 
-                        // --- Beneficiários ---
+                        /// --- Beneficiários ---
                         composable("beneficiarios") { BeneficiarioView(navController) }
-                        composable("beneficiarios/add") { CriarBeneficiarioView(navController) }
-                        composable("beneficiarios/{id}") { backStack ->
-                            val id = backStack.arguments?.getString("id") ?: ""
-                            DetalhesBeneficiarioView(navController, id)
+
+                        composable("beneficiarios/criar") {
+                            CriarBeneficiarioView(navController)
                         }
-                        composable("beneficiarios/{id}/edit") { backStack ->
+
+                        composable("beneficiarios/detalhes/{id}") { backStack ->
+                            val id = backStack.arguments?.getString("id") ?: ""
+                            DetalhesBeneficiarioView(id, navController)
+                        }
+
+                        composable("beneficiarios/editar/{id}") { backStack ->
                             val id = backStack.arguments?.getString("id") ?: ""
                             EditarBeneficiarioView(navController, id)
                         }
@@ -127,29 +132,30 @@ class MainActivity : ComponentActivity() {
                             EntregasListView(navController)
                         }
 
-                        composable("entrega/novo") {
-                            CriarEntregaView(
-                                navController = navController,
-                                beneficiarioId = null,
-                                pedidoId = null
-                            )
-                        }
-
                         composable(
-                            route = "entrega/{beneficiarioId}/{pedidoId}",
+                            route = "entrega/criar?pedidoId={pedidoId}",
                             arguments = listOf(
-                                navArgument("beneficiarioId") { type = NavType.StringType },
-                                navArgument("pedidoId") { type = NavType.StringType }
+                                navArgument("pedidoId") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                }
                             )
                         ) { backStackEntry ->
-                            val beneficiarioId = backStackEntry.arguments?.getString("beneficiarioId")
                             val pedidoId = backStackEntry.arguments?.getString("pedidoId")
 
                             CriarEntregaView(
                                 navController = navController,
-                                beneficiarioId = beneficiarioId,
                                 pedidoId = pedidoId
                             )
+                        }
+
+                        composable(
+                            route = "entrega/detalhes/{entregaId}",
+                            arguments = listOf(navArgument("entregaId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val entregaId = backStackEntry.arguments?.getString("entregaId") ?: return@composable
+                            EntregaDetalhesView(navController, entregaId)
                         }
 
                         composable(

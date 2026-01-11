@@ -50,7 +50,7 @@ fun EntregasListView(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("entrega/novo") },
+                onClick = { navController.navigate("entrega/criar?pedidoId={pedidoId}") },
                 containerColor = IpcaButtonGreen,
                 contentColor = WhiteColor
             ) {

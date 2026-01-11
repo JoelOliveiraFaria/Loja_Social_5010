@@ -1,15 +1,11 @@
 package com.example.lojasocial.ui.entrega
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lojasocial.models.*
 import com.example.lojasocial.repositories.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,147 +18,129 @@ class CriarEntregaViewModel @Inject constructor(
 ) : ViewModel() {
 
     var entrega = mutableStateOf<Entrega?>(null)
-        private set
-
     var nomeBeneficiario = mutableStateOf("")
-        private set
-
-    var textoPedido = mutableStateOf("")
-        private set
-
-    var erro = mutableStateOf<String?>(null)
-        private set
-
+    var beneficiarioSelecionadoId = mutableStateOf<String?>(null)
+    var beneficiariosDisponiveis = mutableStateOf<List<Beneficiario>>(emptyList())
     var produtosDisponiveis = mutableStateOf<List<Produto>>(emptyList())
-        private set
+    var erro = mutableStateOf<String?>(null)
 
-    var beneficiarios = mutableStateOf<List<Beneficiario>>(emptyList())
-        private set
+    // Estado para o Pop-up de aviso de stock
+    var avisoStock = mutableStateOf<String?>(null)
 
-    var beneficiarioSelecionado = mutableStateOf<String?>(null)
-        private set
-
-    init {
-
+    fun inicializar(pedidoId: String?) {
+        // 1. Carregar Beneficiários
         viewModelScope.launch {
-            beneficiarioRepository.observeBeneficiarios().collect { res ->
-                if (res is ResultWrapper.Success) {
-                    beneficiarios.value = res.value
+            beneficiarioRepository.observeBeneficiarios().collect { result ->
+                if (result is ResultWrapper.Success) {
+                    beneficiariosDisponiveis.value = result.value
                 }
             }
         }
-        carregarProdutos()
-    }
 
-    fun iniciarEntrega(beneficiarioId: String?, pedidoId: String?) {
-        entrega.value = Entrega(
-            beneficiarioId = beneficiarioId,
-            pedidoId = pedidoId,
-            itens = emptyList()
-        )
-
-        if (beneficiarioId != null) carregarBeneficiario(beneficiarioId)
-        if (pedidoId != null) carregarPedido(pedidoId)
-    }
-
-    private fun carregarBeneficiario(id: String?) {
-        if (id == null) return
+        // 2. Carregar Produtos do Inventário
         viewModelScope.launch {
-            when (val res = beneficiarioRepository.obterBeneficiario(id)) {
-                is ResultWrapper.Success -> {
-                    nomeBeneficiario.value = res.value.nome ?: "—"
-                    beneficiarioSelecionado.value = res.value.id
+            produtoRepository.getProdutos().collect { result ->
+                when (result) {
+                    is ResultWrapper.Success -> produtosDisponiveis.value = result.value
+                    is ResultWrapper.Error -> erro.value = result.message
+                    else -> {}
                 }
-                else -> nomeBeneficiario.value = "Beneficiário desconhecido"
             }
         }
-    }
 
-    private fun carregarPedido(id: String) {
+        // 3. Lógica de inicialização de Pedido ou Manual
         viewModelScope.launch {
-            val pedido = pedidoRepository.getPedidoById(id)
-            textoPedido.value = pedido?.textoPedido ?: ""
-        }
-    }
-
-    private fun carregarProdutos() {
-        viewModelScope.launch {
-            produtoRepository.getProdutos().collect { res ->
-                when (res) {
-                    is ResultWrapper.Success -> produtosDisponiveis.value = res.value
-                    is ResultWrapper.Error -> erro.value = res.message
-                    else -> Unit
+            if (!pedidoId.isNullOrBlank()) {
+                val pedido = pedidoRepository.getPedidoById(pedidoId)
+                pedido?.let { p ->
+                    beneficiarioSelecionadoId.value = p.beneficiarioId
+                    val bResult = beneficiarioRepository.obterBeneficiario(p.beneficiarioId)
+                    if (bResult is ResultWrapper.Success) {
+                        nomeBeneficiario.value = bResult.value.nome ?: ""
+                    }
+                    entrega.value = Entrega(
+                        pedidoId = pedidoId,
+                        beneficiarioId = p.beneficiarioId,
+                        status = EntregaStatus.EM_ANDAMENTO,
+                        itens = emptyList()
+                    )
                 }
+            } else {
+                entrega.value = Entrega(status = EntregaStatus.EM_ANDAMENTO)
             }
         }
     }
 
-    fun setBeneficiarioManual(id: String, nome: String) {
-        beneficiarioSelecionado.value = id
-        nomeBeneficiario.value = nome
+    fun limparAviso() {
+        avisoStock.value = null
     }
 
-    // ---------- Produtos com lotes ----------
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun adicionarProduto(produto: Produto, quantidade: Int) {
+    fun selecionarBeneficiarioManual(b: Beneficiario) {
+        beneficiarioSelecionadoId.value = b.id
+        nomeBeneficiario.value = b.nome ?: ""
+        entrega.value = entrega.value?.copy(beneficiarioId = b.id)
+    }
+
+    fun adicionarProduto(produto: Produto) {
         val atual = entrega.value ?: return
-        viewModelScope.launch {
-            try {
-                val lotes = produtoRepository.observeLotes(produto.id!!).filterIsInstance<ResultWrapper.Success<List<LoteStock>>>().first().value
-                val lotesDisponiveis = lotes.filter { it.quantidade > 0 }.sortedBy { it.dataValidade }
-                if (lotesDisponiveis.isEmpty()) throw Exception("Sem stock disponível")
 
-                var qtdRestante = quantidade
-                val lotesConsumidos = mutableListOf<LoteConsumido>()
+        // Validação inicial de stock
+        if (produto.quantidadeTotal <= 0) {
+            avisoStock.value = "O produto ${produto.nome} não tem stock disponível no inventário."
+            return
+        }
 
-                for (lote in lotesDisponiveis) {
-                    if (qtdRestante <= 0) break
-                    val usar = minOf(qtdRestante, lote.quantidade)
-                    lotesConsumidos.add(LoteConsumido(lote.id, usar))
-                    qtdRestante -= usar
-                }
-                if (qtdRestante > 0) throw Exception("Stock insuficiente")
+        val listaItens = atual.itens.toMutableList()
+        val existente = listaItens.find { it.produtoId == produto.id }
 
-                val itensAtualizados = atual.itens.toMutableList()
-                val index = itensAtualizados.indexOfFirst { it.produtoId == produto.id }
-                if (index >= 0) {
-                    val itemAtual = itensAtualizados[index]
-                    itensAtualizados[index] = itemAtual.copy(
-                        lotesConsumidos = itemAtual.lotesConsumidos + lotesConsumidos
-                    )
-                } else {
-                    itensAtualizados.add(
-                        ItemEntrega(
-                            produtoId = produto.id,
-                            produtoNome = produto.nome,
-                            lotesConsumidos = lotesConsumidos
-                        )
-                    )
-                }
-                entrega.value = atual.copy(itens = itensAtualizados)
-
-            } catch (e: Exception) {
-                erro.value = e.message
-            }
+        if (existente != null) {
+            aumentarQuantidade(produto.id!!)
+        } else {
+            listaItens.add(
+                ItemEntrega(
+                    produtoId = produto.id!!,
+                    produtoNome = produto.nome,
+                    lotesConsumidos = listOf(LoteConsumido(loteId = "default", quantidade = 1))
+                )
+            )
+            entrega.value = atual.copy(itens = listaItens)
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun aumentarQuantidade(produtoId: String) {
-        val produto = produtosDisponiveis.value.firstOrNull { it.id == produtoId } ?: return
-        adicionarProduto(produto, 1)
+        val atual = entrega.value ?: return
+
+        // Busca o stock real do produto no inventário carregado
+        val prodInventario = produtosDisponiveis.value.find { it.id == produtoId }
+        val stockMaximo = prodInventario?.quantidadeTotal ?: 0
+
+        val novosItens = atual.itens.map { item ->
+            if (item.produtoId == produtoId) {
+                val qtdAtual = item.lotesConsumidos.sumOf { it.quantidade }
+
+                if (qtdAtual >= stockMaximo) {
+                    avisoStock.value = "Não é possível adicionar mais. O produto ${item.produtoNome} tem apenas $stockMaximo unidades em stock."
+                    item
+                } else {
+                    val lote = item.lotesConsumidos.first()
+                    item.copy(lotesConsumidos = listOf(lote.copy(quantidade = lote.quantidade + 1)))
+                }
+            } else item
+        }
+        entrega.value = atual.copy(itens = novosItens)
     }
 
     fun diminuirQuantidade(produtoId: String) {
         val atual = entrega.value ?: return
-        val itensAtualizados = atual.itens.map { item ->
+        val novosItens = atual.itens.map { item ->
             if (item.produtoId == produtoId) {
-                val qtdAtual = item.lotesConsumidos.sumOf { it.quantidade }
-                if (qtdAtual <= 1) return@map item
-                item.copy(lotesConsumidos = listOf(LoteConsumido(item.lotesConsumidos.first().loteId, qtdAtual - 1)))
+                val lote = item.lotesConsumidos.first()
+                if (lote.quantidade > 1) {
+                    item.copy(lotesConsumidos = listOf(lote.copy(quantidade = lote.quantidade - 1)))
+                } else item
             } else item
         }
-        entrega.value = atual.copy(itens = itensAtualizados)
+        entrega.value = atual.copy(itens = novosItens)
     }
 
     fun removerProduto(produtoId: String) {
@@ -170,27 +148,23 @@ class CriarEntregaViewModel @Inject constructor(
         entrega.value = atual.copy(itens = atual.itens.filterNot { it.produtoId == produtoId })
     }
 
-    // ---------- Salvar entrega ----------
-    fun salvarEntrega(onSuccess: (String) -> Unit, onError: (String) -> Unit) {
-        val atual = entrega.value ?: return onError("Entrega inválida ou sem produtos")
-        if (atual.itens.isEmpty()) return onError("Entrega sem produtos")
-        if (beneficiarioSelecionado.value.isNullOrBlank()) return onError("Selecionar um beneficiário")
+    fun salvarEntrega(onSuccess: () -> Unit) {
+        val atual = entrega.value ?: return
+        if (beneficiarioSelecionadoId.value == null) {
+            erro.value = "Selecione um beneficiário"
+            return
+        }
+        if (atual.itens.isEmpty()) {
+            erro.value = "Adicione pelo menos um produto"
+            return
+        }
 
         viewModelScope.launch {
             try {
-                val entregaParaSalvar = atual.copy(
-                    beneficiarioId = beneficiarioSelecionado.value
-                )
-                val idEntrega = entregaRepository.criarEntrega(entregaParaSalvar)
-
-                // Atualiza status do pedido se houver
-                atual.pedidoId?.let {
-                    pedidoRepository.atualizarStatus(it, PedidoStatus.EM_ANDAMENTO)
-                }
-
-                onSuccess(idEntrega)
+                entregaRepository.criarEntrega(atual.copy(beneficiarioId = beneficiarioSelecionadoId.value))
+                onSuccess()
             } catch (e: Exception) {
-                onError(e.message ?: "Erro ao criar entrega")
+                erro.value = e.message
             }
         }
     }

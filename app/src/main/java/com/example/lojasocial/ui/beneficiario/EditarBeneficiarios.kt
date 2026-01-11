@@ -1,239 +1,110 @@
 package com.example.lojasocial.ui.beneficiario
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.lojasocial.models.Beneficiario
-import com.example.lojasocial.ui.components.TopBarVoltar
-import com.example.lojasocial.ui.components.TopBarWithMenu
+import com.example.lojasocial.R
 
-// Cores do tema
 private val BgGreen = Color(0xFF0B3B2E)
-private val LineGreen = Color(0xFF2C6B55)
-private val ButtonGreen = Color(0xFF1F6F43)
-private val TextWhite = Color.White
-private val ErrorRed = Color(0xFFEF5350)
+private val IpcaButtonGreen = Color(0xFF1F6F43)
+private val WhiteColor = Color.White
 
-// ---------------------------------------------------------
-// 1. ENTRY POINT (Lógica + ViewModel)
-// ---------------------------------------------------------
 @Composable
 fun EditarBeneficiarioView(
     navController: NavController,
     id: String,
     viewModel: BeneficiarioViewModel = hiltViewModel()
 ) {
-    val detalhe by viewModel.detalheState.collectAsState()
+    val state by viewModel.detalheState.collectAsState()
 
-    // Carregar dados ao entrar
-    LaunchedEffect(id) {
-        viewModel.carregarBeneficiario(id)
-    }
-
-    EditarBeneficiarioContent(
-        navController = navController,
-        state = detalhe,
-        onSave = { nome, nif, email, telefone, estado -> // <-- Recebe estado
-            viewModel.atualizar(
-                Beneficiario(
-                    id = id,
-                    nome = nome,
-                    nif = nif,
-                    email = email,
-                    telefone = telefone,
-                    estado = estado // <-- Atualiza o modelo
-                )
-            ) {
-                navController.popBackStack()
-            }
-        },
-        onCancel = { navController.popBackStack() }
-    )
-}
-
-// ---------------------------------------------------------
-// 2. CONTEÚDO VISUAL (Stateless para Preview)
-// ---------------------------------------------------------
-@Composable
-fun EditarBeneficiarioContent(
-    navController: NavController,
-    state: BeneficiarioDetalheState,
-    onSave: (String, String, String, String, Boolean) -> Unit, // <-- Assinatura atualizada
-    onCancel: () -> Unit
-) {
-    // Estados locais do formulário
     var nome by remember { mutableStateOf("") }
     var nif by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var telefone by remember { mutableStateOf("") }
     var estado by remember { mutableStateOf(true) }
 
-    // Quando os dados chegarem da API (state.beneficiario), preenchemos os campos 1 vez
+    LaunchedEffect(id) { viewModel.carregarBeneficiario(id) }
+
     LaunchedEffect(state.beneficiario) {
-        val b = state.beneficiario ?: return@LaunchedEffect
-        nome = b.nome ?: ""
-        nif = b.nif ?: ""
-        email = b.email ?: ""
-        telefone = b.telefone ?: ""
-        estado = b.estado ?: true
+        state.beneficiario?.let {
+            nome = it.nome ?: ""
+            nif = it.nif ?: ""
+            email = it.email ?: ""
+            telefone = it.telefone ?: ""
+            estado = it.estado ?: true
+        }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BgGreen)
-    ) {
-        TopBarVoltar(navController, "Editar Beneficiário")
-        Divider(color = LineGreen)
+    Box(modifier = Modifier.fillMaxSize().background(BgGreen)) {
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+            // Cabeçalho
+            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.align(Alignment.CenterStart)) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = WhiteColor)
+                }
+                Image(painter = painterResource(id = R.drawable.logo), contentDescription = null, modifier = Modifier.height(50.dp).align(Alignment.Center).clickable { navController.navigate("welcome") }, contentScale = ContentScale.Fit)
+            }
 
-        Text(
-            text = "Editar Beneficiário",
-            color = TextWhite,
-            fontSize = 30.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
+            Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).verticalScroll(rememberScrollState())) {
+                Spacer(Modifier.height(16.dp))
+                Text("Editar Perfil", style = MaterialTheme.typography.headlineMedium, color = WhiteColor, fontWeight = FontWeight.Bold)
 
-        // Loading
-        if (state.isLoading) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        }
+                Spacer(Modifier.height(32.dp))
+                BeneficiarioTextField(nome, { nome = it }, "Nome")
+                Spacer(Modifier.height(16.dp))
+                BeneficiarioTextField(nif, { nif = it }, "NIF")
+                Spacer(Modifier.height(16.dp))
+                BeneficiarioTextField(email, { email = it }, "Email")
+                Spacer(Modifier.height(16.dp))
+                BeneficiarioTextField(telefone, { telefone = it }, "Telefone")
 
-        // Erro
-        state.error?.let {
-            Text(text = it, color = ErrorRed, modifier = Modifier.padding(16.dp))
-        }
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 16.dp)) {
+                    Switch(checked = estado, onCheckedChange = { estado = it }, colors = SwitchDefaults.colors(checkedThumbColor = IpcaButtonGreen))
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (estado) "Ativo" else "Inativo", color = WhiteColor)
+                }
 
-        // Formulário
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            FieldWhite(label = "Nome do beneficiário", value = nome, onChange = { nome = it })
-            Spacer(Modifier.height(12.dp))
-
-            FieldWhite(label = "NIF", value = nif, onChange = { nif = it })
-            Spacer(Modifier.height(12.dp))
-
-            FieldWhite(label = "Email", value = email, onChange = { email = it })
-            Spacer(Modifier.height(12.dp))
-
-            FieldWhite(label = "Telefone", value = telefone, onChange = { telefone = it })
-
-            Spacer(Modifier.height(12.dp))
-
-            // Switch de Estado (Ativo/Inativo)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = if (estado) "Estado: Ativo" else "Estado: Inativo",
-                    color = TextWhite,
-                    fontSize = 16.sp
-                )
-                Switch(
-                    checked = estado,
-                    onCheckedChange = { estado = it },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = ButtonGreen,
-                        uncheckedThumbColor = Color.LightGray,
-                        uncheckedTrackColor = Color.Gray
-                    )
-                )
+                Button(
+                    onClick = {
+                        state.beneficiario?.let {
+                            val b = it.copy(nome = nome, nif = nif, email = email, telefone = telefone, estado = estado)
+                            viewModel.atualizar(b) { navController.popBackStack() }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = IpcaButtonGreen),
+                    enabled = !state.isLoading,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = WhiteColor,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Atualizar Dados", fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
-
-        Spacer(Modifier.weight(1f))
-
-        // Botões
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Button(
-                onClick = onCancel,
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier.weight(1f).height(50.dp)
-            ) { Text("Cancelar", color = TextWhite) }
-
-            Spacer(Modifier.width(12.dp))
-
-            Button(
-                onClick = { onSave(nome, nif, email, telefone, estado) }, // <-- Envia estado
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier.weight(1f).height(50.dp)
-            ) { Text("Guardar", color = TextWhite) }
-        }
     }
-}
-
-// ---------------------------------------------------------
-// 3. COMPONENTE AUXILIAR (Input Branco)
-// ---------------------------------------------------------
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FieldWhite(
-    label: String,
-    value: String,
-    onChange: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onChange,
-        label = { Text(label, color = TextWhite) },
-        modifier = Modifier.fillMaxWidth(),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = TextWhite,
-            unfocusedBorderColor = TextWhite,
-            focusedTextColor = TextWhite,
-            unfocusedTextColor = TextWhite,
-            cursorColor = TextWhite
-        )
-    )
-}
-
-// ---------------------------------------------------------
-// 4. PREVIEW
-// ---------------------------------------------------------
-@Preview(showBackground = true)
-@Composable
-fun EditarBeneficiarioPreview() {
-    val bMock = Beneficiario(
-        id = "1",
-        nome = "João Silva",
-        nif = "123456789",
-        email = "joao@teste.com",
-        telefone = "912345678",
-        estado = true
-    )
-
-    val stateMock = BeneficiarioDetalheState(
-        isLoading = false,
-        error = null,
-        beneficiario = bMock
-    )
-
-    EditarBeneficiarioContent(
-        navController = rememberNavController(),
-        state = stateMock,
-        onSave = { _, _, _, _, _ -> },
-        onCancel = {}
-    )
 }

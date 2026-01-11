@@ -91,7 +91,7 @@ class BeneficiarioViewModel @Inject constructor(
 
     fun criar(b: Beneficiario, onDone: () -> Unit) {
         viewModelScope.launch {
-            uiState.value = uiState.value.copy(isLoading = true) // Feedback visual na lista/form
+            uiState.value = uiState.value.copy(isLoading = true)
             when (val r = repo.criarBeneficiario(b)) {
                 is ResultWrapper.Success -> {
                     uiState.value = uiState.value.copy(isLoading = false)

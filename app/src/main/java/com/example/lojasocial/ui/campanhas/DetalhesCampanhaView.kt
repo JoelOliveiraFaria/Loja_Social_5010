@@ -1,28 +1,30 @@
 package com.example.lojasocial.ui.campanhas
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.lojasocial.ui.components.TopBarVoltar
-import com.example.lojasocial.ui.components.TopBarWithMenu
+import com.example.lojasocial.R
 
 private val BgGreen = Color(0xFF0B3B2E)
-private val LineGreen = Color(0xFF2C6B55)
-private val ButtonGreen = Color(0xFF1F6F43)
-private val DangerRed = Color(0xFFD84343)
-private val TextWhite = Color.White
+private val IpcaButtonGreen = Color(0xFF1F6F43)
+private val WhiteColor = Color.White
+private val LabelColor = Color(0xFFB7D7CC)
 
 @Composable
 fun DetalhesCampanhaView(
@@ -32,116 +34,63 @@ fun DetalhesCampanhaView(
 ) {
     val detalhe by viewModel.detalheState.collectAsState()
 
-    LaunchedEffect(id) { viewModel.carregarCampanha(id) }
-
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BgGreen)
-    ) {
-        TopBarVoltar(navController, "Detalhes da Campanha")
-        Divider(color = LineGreen)
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, top = 16.dp, bottom = 24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "Campanha",
-                color = Color.White,
-                fontSize = 34.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-            )
-        }
-
-        if (detalhe.isLoading) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        }
-
-        detalhe.error?.let {
-            Text(
-                text = it,
-                color = Color(0xFFEF5350),
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-
-        val c = detalhe.campanha
-
-        if (c != null) {
-            Column(modifier = Modifier.padding(horizontal = 18.dp)) {
-                LabelValue("Nome", c.nome)
-                Spacer(Modifier.height(14.dp))
-                LabelValue("Descrição", c.descricao)
-                Spacer(Modifier.height(14.dp))
-                LabelValue("Data de início", c.dataInicio)
-                Spacer(Modifier.height(14.dp))
-                LabelValue("Data de fim", c.dataFim)
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = { navController.navigate("campanhas/${c.id}/edit") },
-                    colors = ButtonDefaults.buttonColors(containerColor = ButtonGreen),
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp)
-                ) { Text("Editar", color = Color.White) }
-
-                Spacer(Modifier.width(12.dp))
-
-                Button(
-                    onClick = { showDeleteDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = DangerRed),
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp)
-                ) { Text("Eliminar", color = Color.White) }
-            }
-        }
+    LaunchedEffect(id) {
+        viewModel.carregarCampanha(id)
     }
 
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar campanha?") },
-            text = { Text("Tens a certeza que queres eliminar esta campanha?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteDialog = false
-                        viewModel.eliminar(id)
-                        navController.popBackStack() // volta para a lista
-                    }
-                ) { Text("Eliminar", color = DangerRed) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+    Box(modifier = Modifier.fillMaxSize().background(BgGreen)) {
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+
+            // --- CABEÇALHO ---
+            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.align(Alignment.CenterStart)) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = WhiteColor)
+                }
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo",
+                    modifier = Modifier.height(50.dp).align(Alignment.Center).clickable { navController.navigate("welcome") },
+                    contentScale = ContentScale.Fit
+                )
             }
-        )
+
+            val c = detalhe.campanha
+            if (c != null) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text("Detalhes da Campanha", style = MaterialTheme.typography.headlineMedium, color = WhiteColor, fontWeight = FontWeight.Bold)
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    LabelValue("Nome da Campanha", c.nome)
+                    Spacer(Modifier.height(24.dp))
+
+                    LabelValue("Descrição", c.descricao)
+                    Spacer(Modifier.height(24.dp))
+
+                    Row(Modifier.fillMaxWidth()) {
+                        Column(Modifier.weight(1f)) { LabelValue("Início", c.dataInicio) }
+                        Column(Modifier.weight(1f)) { LabelValue("Fim", c.dataFim) }
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Button(
+                        onClick = { navController.navigate("campanhas/${id}/edit") },
+                        modifier = Modifier.fillMaxWidth().height(54.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = IpcaButtonGreen),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Editar Campanha", fontWeight = FontWeight.Bold, color = WhiteColor)
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+            }
+        }
     }
 }
 
 @Composable
 private fun LabelValue(label: String, value: String) {
-    Text(text = label, color = Color(0xFFB7D7CC), fontSize = 14.sp)
-    Spacer(Modifier.height(6.dp))
-    Text(text = value.ifBlank { "—" }, color = Color.White, fontSize = 18.sp)
+    Text(text = label, color = LabelColor, fontSize = 14.sp)
+    Text(text = value.ifBlank { "—" }, color = WhiteColor, fontSize = 20.sp, fontWeight = FontWeight.Medium)
 }

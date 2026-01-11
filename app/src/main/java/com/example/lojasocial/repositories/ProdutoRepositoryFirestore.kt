@@ -3,6 +3,7 @@ package com.example.lojasocial.repositories
 import com.example.lojasocial.models.LoteStock
 import com.example.lojasocial.models.Produto
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
@@ -60,9 +61,20 @@ class ProdutoRepositoryFirestore @Inject constructor(
 
     override suspend fun adicionarLote(produtoId: String, lote: LoteStock): ResultWrapper<Unit> {
         return try {
-            val lotesCol = col.document(produtoId).collection("lotes")
+            val produtoRef = col.document(produtoId)
+            val lotesCol = produtoRef.collection("lotes")
             val newDoc = lotesCol.document()
-            lotesCol.document(newDoc.id).set(lote.copy(id = newDoc.id)).await()
+
+            // Usamos uma "WriteBatch" para garantir que se um falhar, o outro não acontece
+            val batch = db.batch()
+
+            // 1. Criar o lote na sub-coleção
+            batch.set(newDoc, lote.copy(id = newDoc.id))
+
+            // 2. Incrementar a quantidadeTotal no documento do Produto
+            batch.update(produtoRef, "quantidadeTotal", FieldValue.increment(lote.quantidade.toLong()))
+
+            batch.commit().await()
             ResultWrapper.Success(Unit)
         } catch (e: Exception) {
             ResultWrapper.Error(e.message ?: "Erro ao adicionar stock")
@@ -71,7 +83,15 @@ class ProdutoRepositoryFirestore @Inject constructor(
 
     override suspend fun eliminarLote(produtoId: String, loteId: String): ResultWrapper<Unit> {
         return try {
-            col.document(produtoId).collection("lotes").document(loteId).delete().await()
+            val produtoRef = col.document(produtoId)
+            val loteRef = produtoRef.collection("lotes").document(loteId)
+            val snapshot = loteRef.get().await()
+            val qtdParaSubtrair = snapshot.getLong("quantidade") ?: 0L
+            val batch = db.batch()
+
+            batch.delete(loteRef)
+            batch.update(produtoRef, "quantidadeTotal", FieldValue.increment(-qtdParaSubtrair))
+            batch.commit().await()
             ResultWrapper.Success(Unit)
         } catch (e: Exception) {
             ResultWrapper.Error("Erro ao apagar lote")

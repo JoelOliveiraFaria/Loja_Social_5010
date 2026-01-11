@@ -93,4 +93,16 @@ class ProdutosViewModel @Inject constructor(
             carregarInventario()
         }
     }
+
+    fun eliminarLote(produtoId: String, loteId: String) {
+        viewModelScope.launch {
+            val result = repository.eliminarLote(produtoId, loteId)
+            if (result is ResultWrapper.Success) {
+                carregarLotes(produtoId)
+                carregarInventario()
+            } else if (result is ResultWrapper.Error) {
+                println("Erro ao eliminar: ${result.message}")
+            }
+        }
+    }
 }
