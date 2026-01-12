@@ -27,6 +27,18 @@ class CriarEntregaViewModel @Inject constructor(
     // Estado para o Pop-up de aviso de stock
     var avisoStock = mutableStateOf<String?>(null)
 
+    val produtosComStockAtualizado: List<Produto>
+        get() {
+            val itensNaEntrega = entrega.value?.itens ?: emptyList()
+            return produtosDisponiveis.value.map { produto ->
+                val selecionado = itensNaEntrega.find { it.produtoId == produto.id }
+                val qtdSelecionada = selecionado?.lotesConsumidos?.sumOf { it.quantidade } ?: 0
+                // Subtrai o que já está na lista do total para mostrar no Dialog
+                produto.copy(quantidadeTotal = produto.quantidadeTotal - qtdSelecionada)
+            }
+        }
+
+
     fun inicializar(pedidoId: String?) {
         // 1. Carregar Beneficiários
         viewModelScope.launch {
@@ -83,47 +95,55 @@ class CriarEntregaViewModel @Inject constructor(
 
     fun adicionarProduto(produto: Produto) {
         val atual = entrega.value ?: return
+        val itensAtuais = atual.itens.toMutableList()
 
-        // Validação inicial de stock
+        // Validar se ainda há stock disponível desse produto
         if (produto.quantidadeTotal <= 0) {
-            avisoStock.value = "O produto ${produto.nome} não tem stock disponível no inventário."
+            avisoStock.value = "Não há mais stock disponível de ${produto.nome}"
             return
         }
 
-        val listaItens = atual.itens.toMutableList()
-        val existente = listaItens.find { it.produtoId == produto.id }
+        val itemExistente = itensAtuais.find { it.produtoId == produto.id }
 
-        if (existente != null) {
-            aumentarQuantidade(produto.id!!)
+        if (itemExistente != null) {
+            // Se já existe, aumentamos a quantidade se houver stock
+            val qtdAtual = itemExistente.lotesConsumidos.sumOf { it.quantidade }
+            if (qtdAtual < (produtosDisponiveis.value.find { it.id == produto.id }?.quantidadeTotal ?: 0)) {
+                val novosItens = itensAtuais.map { item ->
+                    if (item.produtoId == produto.id) {
+                        val lote = item.lotesConsumidos.first()
+                        item.copy(lotesConsumidos = listOf(lote.copy(quantidade = lote.quantidade + 1)))
+                    } else item
+                }
+                entrega.value = atual.copy(itens = novosItens)
+            } else {
+                avisoStock.value = "Limite de stock atingido para este produto."
+            }
         } else {
-            listaItens.add(
-                ItemEntrega(
-                    produtoId = produto.id!!,
-                    produtoNome = produto.nome,
-                    lotesConsumidos = listOf(LoteConsumido(loteId = "default", quantidade = 1))
-                )
+            // Se é novo na lista, adicionamos com quantidade 1
+            val novoItem = ItemEntrega(
+                produtoId = produto.id ?: "",
+                produtoNome = produto.nome,
+                lotesConsumidos = listOf(LoteConsumido(quantidade = 1))
             )
-            entrega.value = atual.copy(itens = listaItens)
+            itensAtuais.add(novoItem)
+            entrega.value = atual.copy(itens = itensAtuais)
         }
     }
 
     fun aumentarQuantidade(produtoId: String) {
         val atual = entrega.value ?: return
-
-        // Busca o stock real do produto no inventário carregado
-        val prodInventario = produtosDisponiveis.value.find { it.id == produtoId }
-        val stockMaximo = prodInventario?.quantidadeTotal ?: 0
+        val stockMax = produtosDisponiveis.value.find { it.id == produtoId }?.quantidadeTotal ?: 0
 
         val novosItens = atual.itens.map { item ->
             if (item.produtoId == produtoId) {
                 val qtdAtual = item.lotesConsumidos.sumOf { it.quantidade }
-
-                if (qtdAtual >= stockMaximo) {
-                    avisoStock.value = "Não é possível adicionar mais. O produto ${item.produtoNome} tem apenas $stockMaximo unidades em stock."
-                    item
-                } else {
+                if (qtdAtual < stockMax) {
                     val lote = item.lotesConsumidos.first()
                     item.copy(lotesConsumidos = listOf(lote.copy(quantidade = lote.quantidade + 1)))
+                } else {
+                    avisoStock.value = "Não existe mais stock disponível."
+                    item
                 }
             } else item
         }

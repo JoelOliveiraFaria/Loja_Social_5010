@@ -39,6 +39,7 @@ fun EntregaDetalhesView(
     val context = LocalContext.current
     var showProdutoDialog by remember { mutableStateOf(false) }
 
+
     LaunchedEffect(entregaId) { viewModel.carregarEntrega(entregaId) }
 
     // DatePicker Logic
@@ -182,12 +183,25 @@ fun EntregaDetalhesView(
 
     if (showProdutoDialog) {
         InventarioDialog(
-            produtos = produtosInventario,
-            onProdutoSelected = {
-                viewModel.adicionarProduto(it)
+            produtos = viewModel.produtosComStockAtualizado,
+            onProdutoSelected = { p ->
+                viewModel.adicionarProduto(p)
                 showProdutoDialog = false
             },
             onDismiss = { showProdutoDialog = false }
+        )
+    }
+
+    viewModel.avisoStock.value?.let { mensagem ->
+        AlertDialog(
+            onDismissRequest = { viewModel.avisoStock.value = null },
+            title = { Text("Aviso de Stock") },
+            text = { Text(mensagem) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.avisoStock.value = null }) {
+                    Text("OK")
+                }
+            }
         )
     }
 }

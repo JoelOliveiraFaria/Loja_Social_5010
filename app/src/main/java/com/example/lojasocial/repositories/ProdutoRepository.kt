@@ -26,6 +26,8 @@ interface ProdutoRepository {
     // RF8: Obter relatório de produtos que vão expirar brevemente
     fun getProdutosExpirados(): Flow<ResultWrapper<List<Produto>>>
 
+    suspend fun atualizarStock(produtoId: String, quantidadeAlteracao: Int)
+
     suspend fun atualizarQuantidadeLote(
         produtoId: String,
         loteId: String,

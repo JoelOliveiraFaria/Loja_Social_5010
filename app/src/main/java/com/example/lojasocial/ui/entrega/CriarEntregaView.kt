@@ -165,7 +165,7 @@ fun CriarEntregaView(
     // --- DIALOGS (Mantidos) ---
     if (showProdutoDialog) {
         InventarioDialog(
-            produtos = produtosInventario,
+            produtos = viewModel.produtosComStockAtualizado,
             onProdutoSelected = { p ->
                 viewModel.adicionarProduto(p)
                 showProdutoDialog = false

@@ -81,6 +81,19 @@ class ProdutoRepositoryFirestore @Inject constructor(
         }
     }
 
+    override suspend fun atualizarStock(produtoId: String, quantidadeAlteracao: Int) {
+        try {
+            val docRef = db.collection("produtos").document(produtoId)
+            db.runTransaction { transaction ->
+                val snapshot = transaction.get(docRef)
+                val stockAtual = snapshot.getLong("quantidadeTotal") ?: 0L
+                transaction.update(docRef, "quantidadeTotal", stockAtual + quantidadeAlteracao)
+            }.await()
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
     override suspend fun eliminarLote(produtoId: String, loteId: String): ResultWrapper<Unit> {
         return try {
             val produtoRef = col.document(produtoId)
