@@ -1,6 +1,5 @@
 package com.example.lojasocial.ui.produtos
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -31,14 +30,21 @@ fun CriarProdutoView(navController: NavController, viewModel: ProdutosViewModel 
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // --- NAVBAR VOLTAR ---
-            TopBarVoltar(navController = navController, title = "Novo Produto")
+            // --- NAVBAR (Seta + Logo) ---
+            TopBarVoltar(navController = navController, title = null)
 
             Divider(color = Color(0xFF2C6B55))
 
-            Column(modifier = Modifier.padding(24.dp)) {
+            // --- TÍTULO DA PÁGINA ---
+            Text(
+                text = "Novo Produto",
+                style = MaterialTheme.typography.headlineMedium,
+                color = WhiteColor,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+            )
 
-                Spacer(Modifier.height(16.dp))
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
 
                 OutlinedTextField(
                     value = nome,

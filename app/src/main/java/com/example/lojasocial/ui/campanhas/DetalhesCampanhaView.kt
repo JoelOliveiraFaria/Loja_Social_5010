@@ -39,12 +39,11 @@ fun DetalhesCampanhaView(
         viewModel.carregarCampanha(id)
     }
 
-    // Dialog de Confirmação para Eliminar
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Eliminar Campanha") },
-            text = { Text("Tem a certeza que deseja eliminar esta campanha? Esta ação não pode ser desfeita.") },
+            text = { Text("Tem a certeza que deseja eliminar esta campanha?") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -64,8 +63,8 @@ fun DetalhesCampanhaView(
     Box(modifier = Modifier.fillMaxSize().background(BgGreen)) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // --- NAVBAR VOLTAR ---
-            TopBarVoltar(navController = navController, title = "Detalhes")
+            // --- NAVBAR (Seta + Logo) ---
+            TopBarVoltar(navController = navController, title = null)
 
             Divider(color = Color(0xFF2C6B55))
 
@@ -81,6 +80,7 @@ fun DetalhesCampanhaView(
                             .padding(24.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
+                        // --- TÍTULO (Nome da Campanha) ---
                         Text(
                             text = c.nome,
                             style = MaterialTheme.typography.headlineMedium,
@@ -101,9 +101,7 @@ fun DetalhesCampanhaView(
                         Spacer(modifier = Modifier.weight(1f))
                         Spacer(Modifier.height(40.dp))
 
-                        // --- BOTÕES DE AÇÃO (Editar e Eliminar) ---
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // Botão Eliminar
                             OutlinedButton(
                                 onClick = { showDeleteDialog = true },
                                 modifier = Modifier.weight(1f).height(54.dp),
@@ -116,7 +114,6 @@ fun DetalhesCampanhaView(
                                 Text("Eliminar")
                             }
 
-                            // Botão Editar
                             Button(
                                 onClick = { navController.navigate("campanhas/${id}/edit") },
                                 modifier = Modifier.weight(1f).height(54.dp),

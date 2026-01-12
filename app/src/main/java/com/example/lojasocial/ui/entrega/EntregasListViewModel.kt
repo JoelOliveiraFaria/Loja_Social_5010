@@ -24,6 +24,10 @@ class EntregasListViewModel @Inject constructor(
 
     val entregas = _filtroStatus.flatMapLatest { status ->
         entregaRepository.getEntregasPorStatus(status ?: EntregaStatus.EM_ANDAMENTO)
+            // --- CORREÇÃO: Ordenação explícita aqui ---
+            .map { lista ->
+                lista.sortedByDescending { it.dataCriacao } // Mais recentes primeiro
+            }
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
@@ -43,7 +47,7 @@ class EntregasListViewModel @Inject constructor(
         }
     }
 
-    fun alterarFiltro(novoStatus: EntregaStatus?) {
+    fun alterarFiltro(novoStatus: EntregaStatus) {
         _filtroStatus.value = novoStatus
     }
 }

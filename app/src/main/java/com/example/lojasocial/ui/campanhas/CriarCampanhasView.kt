@@ -1,17 +1,14 @@
 package com.example.lojasocial.ui.campanhas
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -36,7 +33,6 @@ fun CriarCampanhaView(
 
     Scaffold(
         containerColor = BgGreenColor,
-        // Remove padding automático do sistema para o verde ir até ao topo
         contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         Column(
@@ -44,11 +40,19 @@ fun CriarCampanhaView(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // --- NAVBAR CORRETA ---
-            TopBarVoltar(navController = navController, title = "Nova Campanha")
+            // --- NAVBAR (Seta + Logo) ---
+            TopBarVoltar(navController = navController, title = null)
 
-            // --- LINHA SEPARADORA ---
             Divider(color = Color(0xFF2C6B55))
+
+            // --- TÍTULO ---
+            Text(
+                text = "Nova Campanha",
+                style = MaterialTheme.typography.headlineMedium,
+                color = WhiteFixed,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+            )
 
             Column(
                 modifier = Modifier
@@ -56,8 +60,6 @@ fun CriarCampanhaView(
                     .padding(horizontal = 24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
-
                 // --- CAMPOS DE INPUT ---
                 FieldWhite("Nome da Campanha", nome) { nome = it }
                 Spacer(Modifier.height(16.dp))
@@ -85,7 +87,6 @@ fun CriarCampanhaView(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // --- BOTÃO GUARDAR ---
                 Button(
                     onClick = {
                         val inicioVal = dateDigitsToSortableInt(inicioDigits)
@@ -123,7 +124,7 @@ fun CriarCampanhaView(
     }
 }
 
-// Manter as funções auxiliares (FieldWhite, DateFieldWhite) iguais...
+// Funções auxiliares (FieldWhite, DateFieldWhite) mantêm-se iguais
 @Composable
 private fun FieldWhite(label: String, value: String, minLines: Int = 1, onChange: (String) -> Unit) {
     OutlinedTextField(
@@ -153,7 +154,7 @@ private fun DateFieldWhite(label: String, digitsValue: String, onDigitsChange: (
         placeholder = { Text("DD/MM/AAAA", color = Color.White.copy(alpha = 0.4f)) },
         modifier = Modifier.fillMaxWidth(),
         visualTransformation = DateMaskVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(

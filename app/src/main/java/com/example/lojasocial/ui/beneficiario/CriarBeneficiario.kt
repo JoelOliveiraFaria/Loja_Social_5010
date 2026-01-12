@@ -45,11 +45,19 @@ fun CriarBeneficiarioView(
                 .padding(padding)
         ) {
 
-            // --- NAVBAR CORRETA ---
-            TopBarVoltar(navController = navController, title = "Novo Beneficiário")
+            // --- NAVBAR (Seta + Logo) ---
+            TopBarVoltar(navController = navController, title = null)
 
-            // --- LINHA ---
             Divider(color = Color(0xFF2C6B55))
+
+            // --- TÍTULO ---
+            Text(
+                text = "Novo Beneficiário",
+                style = MaterialTheme.typography.headlineMedium,
+                color = WhiteColor,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+            )
 
             Column(
                 modifier = Modifier
@@ -57,8 +65,6 @@ fun CriarBeneficiarioView(
                     .padding(horizontal = 24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Spacer(Modifier.height(24.dp))
-
                 if (uiState.error != null) {
                     Text(uiState.error!!, color = Color.Red, fontSize = 14.sp)
                     Spacer(Modifier.height(8.dp))

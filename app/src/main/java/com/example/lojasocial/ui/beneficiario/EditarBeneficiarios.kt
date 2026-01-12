@@ -49,10 +49,19 @@ fun EditarBeneficiarioView(
     Box(modifier = Modifier.fillMaxSize().background(BgGreen)) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
 
-            // --- NAVBAR VOLTAR ---
-            TopBarVoltar(navController = navController, title = "Editar Perfil")
+            // --- NAVBAR (Seta + Logo) ---
+            TopBarVoltar(navController = navController, title = null)
 
             Divider(color = Color(0xFF2C6B55))
+
+            // --- TÍTULO ---
+            Text(
+                text = "Editar Perfil",
+                style = MaterialTheme.typography.headlineMedium,
+                color = WhiteColor,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+            )
 
             Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).verticalScroll(rememberScrollState())) {
                 Spacer(Modifier.height(16.dp))

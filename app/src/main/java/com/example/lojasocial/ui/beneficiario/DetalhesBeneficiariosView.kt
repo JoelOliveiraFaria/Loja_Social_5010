@@ -33,7 +33,6 @@ fun DetalhesBeneficiarioView(
 
     Scaffold(
         containerColor = BgGreen,
-        // CORREÇÃO: Remove padding de topo
         contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
             Surface(color = BgGreen, modifier = Modifier.fillMaxWidth()) {
@@ -60,13 +59,19 @@ fun DetalhesBeneficiarioView(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                // --- NAVBAR VOLTAR ---
-                TopBarVoltar(navController = navController, title = "Detalhes")
+                // --- NAVBAR (Seta + Logo) ---
+                TopBarVoltar(navController = navController, title = null)
 
                 Divider(color = Color(0xFF2C6B55))
 
                 Column(modifier = Modifier.padding(24.dp)) {
-                    Text(b?.nome ?: "Detalhes", style = MaterialTheme.typography.headlineMedium, color = WhiteColor, fontWeight = FontWeight.Bold)
+                    // --- TÍTULO (Nome do Beneficiário) ---
+                    Text(
+                        text = b?.nome ?: "Detalhes",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = WhiteColor,
+                        fontWeight = FontWeight.Bold
+                    )
 
                     Spacer(Modifier.height(24.dp))
 

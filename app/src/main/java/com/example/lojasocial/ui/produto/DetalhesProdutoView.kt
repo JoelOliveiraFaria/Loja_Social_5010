@@ -1,6 +1,5 @@
 package com.example.lojasocial.ui.produtos
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -80,11 +79,12 @@ fun DetalhesProdutoView(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // --- NAVBAR VOLTAR ---
-            TopBarVoltar(navController = navController, title = "Detalhes")
+            // --- NAVBAR (Seta + Logo) ---
+            TopBarVoltar(navController = navController, title = null)
 
             Divider(color = Color(0xFF2C6B55))
 
+            // --- TÍTULO (Nome do Produto) ---
             Text(
                 text = produto?.nome ?: "Produto",
                 style = MaterialTheme.typography.headlineMedium,
@@ -119,10 +119,10 @@ fun DetalhesProdutoView(
         }
     }
 
-    // --- DIÁLOGO ---
+    // --- DIÁLOGO (Mantido igual) ---
     if (showAddDialog) {
         var qtdInput by remember { mutableStateOf("") }
-        var dateDigits by remember { mutableStateOf("") } // Apenas números (DDMMYYYY)
+        var dateDigits by remember { mutableStateOf("") }
         var erroMsg by remember { mutableStateOf<String?>(null) }
 
         AlertDialog(

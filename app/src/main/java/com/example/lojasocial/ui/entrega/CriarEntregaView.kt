@@ -1,6 +1,5 @@
 package com.example.lojasocial.ui.entrega
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -61,7 +60,6 @@ fun CriarEntregaView(
 
     Scaffold(
         containerColor = BgGreen,
-        // IMPORTANTE: Remove o padding automático do sistema para o verde ir até ao topo
         contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
             Surface(
@@ -88,10 +86,19 @@ fun CriarEntregaView(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // --- NAVBAR PADRONIZADA ---
-            TopBarVoltar(navController = navController, title = "Nova Entrega")
+            // --- NAVBAR (Seta + Logo) ---
+            TopBarVoltar(navController = navController, title = null)
 
             Divider(color = Color(0xFF2C6B55))
+
+            // --- TÍTULO ---
+            Text(
+                text = "Nova Entrega",
+                style = MaterialTheme.typography.headlineMedium,
+                color = WhiteColor,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+            )
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -150,14 +157,12 @@ fun CriarEntregaView(
                     )
                 }
 
-                // Espaço extra para o botão do fundo não tapar conteúdo
                 item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }
 
-    // --- DIALOGS ---
-
+    // --- DIALOGS (Mantidos) ---
     if (showProdutoDialog) {
         InventarioDialog(
             produtos = produtosInventario,
@@ -190,11 +195,7 @@ fun CriarEntregaView(
                     }
                 }
             },
-            confirmButton = {
-                TextButton(onClick = { showBeneficiarioDialog = false }) {
-                    Text("Fechar")
-                }
-            },
+            confirmButton = { TextButton(onClick = { showBeneficiarioDialog = false }) { Text("Fechar") } },
             containerColor = Color.White,
             titleContentColor = Color.Black,
             textContentColor = Color.Black

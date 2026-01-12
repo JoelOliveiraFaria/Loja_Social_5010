@@ -54,7 +54,6 @@ fun EntregaDetalhesView(
 
     Scaffold(
         containerColor = BgGreen,
-        // CORREÇÃO: Remove padding de topo
         contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
             Surface(
@@ -82,19 +81,25 @@ fun EntregaDetalhesView(
                 .padding(padding)
         ) {
 
-            // --- NAVBAR CORRETA ---
-            TopBarVoltar(navController = navController, title = "Editar Entrega")
+            // --- NAVBAR (Seta + Logo) ---
+            TopBarVoltar(navController = navController, title = null)
 
-            // --- LINHA SEPARADORA ---
             Divider(color = Color(0xFF2C6B55))
+
+            // --- TÍTULO ---
+            Text(
+                text = "Editar Entrega",
+                style = MaterialTheme.typography.headlineMedium,
+                color = WhiteColor,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+            )
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Removido título duplicado "Editar Entrega"
-
                 // Cartão de Informações
                 item {
                     Card(
@@ -119,9 +124,7 @@ fun EntregaDetalhesView(
                                         modifier = Modifier.weight(1f),
                                         selected = entrega?.status == status,
                                         onClick = { viewModel.atualizarStatus(status) },
-                                        label = {
-                                            Text(status.name, fontSize = 9.sp, maxLines = 1)
-                                        },
+                                        label = { Text(status.name, fontSize = 9.sp, maxLines = 1) },
                                         colors = FilterChipDefaults.filterChipColors(
                                             selectedContainerColor = IpcaButtonGreen,
                                             selectedLabelColor = WhiteColor
@@ -172,7 +175,6 @@ fun EntregaDetalhesView(
                     )
                 }
 
-                // Espaço extra para scroll
                 item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
