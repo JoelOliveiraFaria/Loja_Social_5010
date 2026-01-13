@@ -15,6 +15,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.lojasocial.models.Campanha
 import com.example.lojasocial.ui.components.TopBarVoltar
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 
 private val BgGreenColor = Color(0xFF0B3B2E)
 private val IpcaGreen = Color(0xFF1F6F43)
@@ -31,6 +33,23 @@ fun CriarCampanhaView(
     var fimDigits by remember { mutableStateOf("") }
     var erroData by remember { mutableStateOf<String?>(null) }
 
+    LaunchedEffect(inicioDigits, fimDigits) {
+
+        if (inicioDigits.length < 8 || fimDigits.length < 8) {
+            erroData = null
+            return@LaunchedEffect
+        }
+
+        val inicioVal = dateDigitsToSortableInt(inicioDigits)
+        val fimVal = dateDigitsToSortableInt(fimDigits)
+
+        erroData = when {
+            inicioVal == null || fimVal == null -> "Preenche corretamente as datas."
+            fimVal < inicioVal -> "A data de fim não pode ser anterior ao início."
+            else -> null
+        }
+    }
+
     Scaffold(
         containerColor = BgGreenColor,
         contentWindowInsets = WindowInsets(0.dp)
@@ -40,12 +59,10 @@ fun CriarCampanhaView(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // --- NAVBAR (Seta + Logo) ---
             TopBarVoltar(navController = navController, title = null)
 
             Divider(color = Color(0xFF2C6B55))
 
-            // --- TÍTULO ---
             Text(
                 text = "Nova Campanha",
                 style = MaterialTheme.typography.headlineMedium,
@@ -60,14 +77,17 @@ fun CriarCampanhaView(
                     .padding(horizontal = 24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                // --- CAMPOS DE INPUT ---
+
                 FieldWhite("Nome da Campanha", nome) { nome = it }
                 Spacer(Modifier.height(16.dp))
 
                 FieldWhite("Descrição", descricao, minLines = 3) { descricao = it }
                 Spacer(Modifier.height(16.dp))
 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     Column(Modifier.weight(1f)) {
                         DateFieldWhite("Data Início", inicioDigits) { inicioDigits = it }
                     }
@@ -89,13 +109,9 @@ fun CriarCampanhaView(
 
                 Button(
                     onClick = {
-                        val inicioVal = dateDigitsToSortableInt(inicioDigits)
-                        val fimVal = dateDigitsToSortableInt(fimDigits)
-
-                        erroData = when {
-                            inicioVal == null || fimVal == null -> "Preenche corretamente as datas."
-                            fimVal < inicioVal -> "A data de fim não pode ser anterior ao início."
-                            else -> null
+                        if (inicioDigits.length < 8 || fimDigits.length < 8) {
+                            erroData = "Preenche corretamente as datas."
+                            return@Button
                         }
 
                         if (erroData == null) {
@@ -111,7 +127,9 @@ fun CriarCampanhaView(
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = IpcaGreen),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -124,7 +142,6 @@ fun CriarCampanhaView(
     }
 }
 
-// Funções auxiliares (FieldWhite, DateFieldWhite) mantêm-se iguais
 @Composable
 private fun FieldWhite(label: String, value: String, minLines: Int = 1, onChange: (String) -> Unit) {
     OutlinedTextField(
@@ -146,7 +163,11 @@ private fun FieldWhite(label: String, value: String, minLines: Int = 1, onChange
 }
 
 @Composable
-private fun DateFieldWhite(label: String, digitsValue: String, onDigitsChange: (String) -> Unit) {
+private fun DateFieldWhite(
+    label: String,
+    digitsValue: String,
+    onDigitsChange: (String) -> Unit
+) {
     OutlinedTextField(
         value = digitsValue,
         onValueChange = { input -> onDigitsChange(onlyDateDigits(input)) },
@@ -154,7 +175,7 @@ private fun DateFieldWhite(label: String, digitsValue: String, onDigitsChange: (
         placeholder = { Text("DD/MM/AAAA", color = Color.White.copy(alpha = 0.4f)) },
         modifier = Modifier.fillMaxWidth(),
         visualTransformation = DateMaskVisualTransformation(),
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(

@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.lojasocial.ui.components.TopBarWithMenu
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.ui.platform.LocalLifecycleOwner
 
 private val BgGreen = Color(0xFF0B3B2E)
 private val IpcaButtonGreen = Color(0xFF1F6F43)
@@ -29,6 +32,18 @@ private val WhiteColor = Color.White
 fun ProdutosView(navController: NavController, viewModel: ProdutosViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val hoje = viewModel.getHojeStr()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.carregarInventario()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Scaffold(
         containerColor = BgGreen,
@@ -49,7 +64,6 @@ fun ProdutosView(navController: NavController, viewModel: ProdutosViewModel = hi
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // --- NAVBAR COM MENU ---
             TopBarWithMenu(navController = navController)
 
             Divider(color = Color(0xFF2C6B55))

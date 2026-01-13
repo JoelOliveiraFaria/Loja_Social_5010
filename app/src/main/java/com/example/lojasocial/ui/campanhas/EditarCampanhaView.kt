@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.lojasocial.ui.components.TopBarVoltar
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 
 private val BgGreenColor = Color(0xFF0B3B2E)
 private val IpcaGreen = Color(0xFF1F6F43)
@@ -33,6 +35,7 @@ fun EditarCampanhaView(
     var descricao by remember { mutableStateOf("") }
     var inicioDigits by remember { mutableStateOf("") }
     var fimDigits by remember { mutableStateOf("") }
+    var erroData by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(id) {
         viewModel.carregarCampanha(id)
@@ -42,20 +45,44 @@ fun EditarCampanhaView(
         detalhe.campanha?.let {
             nome = it.nome
             descricao = it.descricao
+
             inicioDigits = it.dataInicio.replace("-", "")
             fimDigits = it.dataFim.replace("-", "")
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(BgGreenColor)) {
-        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+    LaunchedEffect(inicioDigits, fimDigits) {
+        // Só valida quando ambas tiverem 8 dígitos (ddMMyyyy)
+        if (inicioDigits.length < 8 || fimDigits.length < 8) {
+            erroData = null
+            return@LaunchedEffect
+        }
 
-            // --- NAVBAR (Seta + Logo) ---
+        val inicioVal = dateDigitsToSortableInt(inicioDigits)
+        val fimVal = dateDigitsToSortableInt(fimDigits)
+
+        erroData = when {
+            inicioVal == null || fimVal == null -> "Preenche corretamente as datas."
+            fimVal < inicioVal -> "A data de fim não pode ser anterior ao início."
+            else -> null
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BgGreenColor)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+
             TopBarVoltar(navController = navController, title = null)
 
             Divider(color = Color(0xFF2C6B55))
 
-            // --- TÍTULO ---
             Text(
                 text = "Editar Campanha",
                 style = MaterialTheme.typography.headlineMedium,
@@ -64,14 +91,21 @@ fun EditarCampanhaView(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
             )
 
-            Column(modifier = Modifier.padding(horizontal = 24.dp).verticalScroll(rememberScrollState())) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
                 FieldWhite("Nome da Campanha", nome) { nome = it }
                 Spacer(Modifier.height(16.dp))
 
                 FieldWhite("Descrição", descricao, minLines = 3) { descricao = it }
                 Spacer(Modifier.height(16.dp))
 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     Column(Modifier.weight(1f)) {
                         DateFieldWhite("Data Início", inicioDigits) { inicioDigits = it }
                     }
@@ -80,32 +114,51 @@ fun EditarCampanhaView(
                     }
                 }
 
+                if (erroData != null) {
+                    Text(
+                        text = erroData!!,
+                        color = Color(0xFFEF5350),
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(40.dp))
 
                 Button(
                     onClick = {
-                        val c = detalhe.campanha?.copy(
-                            nome = nome,
-                            descricao = descricao,
-                            dataInicio = digitsToDashedDatePartial(inicioDigits),
-                            dataFim = digitsToDashedDatePartial(fimDigits)
-                        )
-                        if (c != null) {
-                            viewModel.atualizar(c) { navController.popBackStack() }
+                        if (inicioDigits.length < 8 || fimDigits.length < 8) {
+                            erroData = "Preenche corretamente as datas."
+                            return@Button
+                        }
+
+                        if (erroData == null) {
+                            val c = detalhe.campanha?.copy(
+                                nome = nome,
+                                descricao = descricao,
+                                dataInicio = digitsToDashedDatePartial(inicioDigits),
+                                dataFim = digitsToDashedDatePartial(fimDigits)
+                            )
+                            if (c != null) {
+                                viewModel.atualizar(c) { navController.popBackStack() }
+                            }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = IpcaGreen),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Salvar Alterações", fontWeight = FontWeight.Bold, color = WhiteFixed)
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
-// Funções auxiliares (reutilizando as que já estão no ficheiro)
 @Composable
 private fun FieldWhite(label: String, value: String, minLines: Int = 1, onChange: (String) -> Unit) {
     OutlinedTextField(
@@ -135,7 +188,7 @@ private fun DateFieldWhite(label: String, digitsValue: String, onDigitsChange: (
         placeholder = { Text("DD/MM/AAAA", color = Color.White.copy(alpha = 0.4f)) },
         modifier = Modifier.fillMaxWidth(),
         visualTransformation = DateMaskVisualTransformation(),
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
