@@ -30,8 +30,6 @@ class ProdutosViewModel @Inject constructor(
     val uiState: StateFlow<InventarioUIState> = _uiState.asStateFlow()
 
     init { carregarInventario() }
-
-    // Correção para API 24: Gera data AAAA-MM-DD sem usar LocalDate
     fun getHojeStr(): String {
         val c = Calendar.getInstance()
         return String.format("%04d-%02d-%02d", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))

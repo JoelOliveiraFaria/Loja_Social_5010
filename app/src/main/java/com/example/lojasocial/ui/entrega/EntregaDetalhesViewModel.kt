@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -81,7 +82,26 @@ class EntregaDetalhesViewModel @Inject constructor(
     }
 
     fun atualizarData(novaData: Long?) {
-        entrega.value = entrega.value?.copy(dataEntrega = novaData)
+        if (novaData == null) return
+
+        val hoje = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val estadoAtual = entrega.value?.status
+        val novoEstado = if (estadoAtual == EntregaStatus.PRONTO && novaData <= hoje + 86400000) {
+            EntregaStatus.ENTREGUE
+        } else {
+            estadoAtual
+        }
+
+        entrega.value = entrega.value?.copy(
+            dataEntrega = novaData,
+            status = novoEstado ?: EntregaStatus.EM_ANDAMENTO
+        )
     }
 
     fun atualizarStatus(novoStatus: EntregaStatus) {

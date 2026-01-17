@@ -35,14 +35,14 @@ fun EntregaDetalhesView(
     viewModel: EntregaDetalhesViewModel = hiltViewModel()
 ) {
     val entrega by viewModel.entrega
-    val produtosInventario by viewModel.produtosDisponiveis.collectAsState()
     val context = LocalContext.current
     var showProdutoDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(entregaId) {
+        viewModel.carregarEntrega(entregaId)
+    }
 
-    LaunchedEffect(entregaId) { viewModel.carregarEntrega(entregaId) }
-
-    // DatePicker Logic
+    // Lógica do DatePicker
     val calendar = Calendar.getInstance()
     val datePickerDialog = DatePickerDialog(
         context,
@@ -50,7 +50,9 @@ fun EntregaDetalhesView(
             calendar.set(y, m, d)
             viewModel.atualizarData(calendar.timeInMillis)
         },
-        calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
     )
 
     Scaffold(
@@ -81,13 +83,10 @@ fun EntregaDetalhesView(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-
-            // --- NAVBAR (Seta + Logo) ---
             TopBarVoltar(navController = navController, title = null)
 
             Divider(color = Color(0xFF2C6B55))
 
-            // --- TÍTULO ---
             Text(
                 text = "Editar Entrega",
                 style = MaterialTheme.typography.headlineMedium,
@@ -101,7 +100,7 @@ fun EntregaDetalhesView(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Cartão de Informações
+                // Cartão de Informações Principais
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -115,7 +114,7 @@ fun EntregaDetalhesView(
                             Spacer(Modifier.height(12.dp))
                             Text("Estado", fontSize = 12.sp, color = Color.Gray)
 
-                            // Linha de Chips de Estado
+                            // Chips de Estado
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -134,24 +133,48 @@ fun EntregaDetalhesView(
                                 }
                             }
 
-                            if (entrega?.status == EntregaStatus.ENTREGUE) {
+                            // Mostra o botão de data apenas para PRONTO ou ENTREGUE
+                            if (entrega?.status == EntregaStatus.PRONTO || entrega?.status == EntregaStatus.ENTREGUE) {
                                 OutlinedButton(
                                     onClick = { datePickerDialog.show() },
-                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = IpcaButtonGreen)
                                 ) {
                                     Icon(Icons.Default.DateRange, null)
                                     Spacer(Modifier.width(8.dp))
-                                    val dataT = entrega?.dataEntrega?.let {
+                                    val dataTexto = entrega?.dataEntrega?.let {
                                         SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it))
-                                    } ?: "Data de Entrega"
-                                    Text(dataT)
+                                    } ?: "Selecionar Data de Entrega"
+                                    Text(dataTexto)
+                                }
+
+                                if (entrega?.status == EntregaStatus.PRONTO) {
+                                    val hoje = System.currentTimeMillis()
+                                    val dataSelecionada = entrega?.dataEntrega ?: 0L
+
+                                    val mensagem = if (dataSelecionada == 0L) {
+                                        "Selecione uma data para agendar"
+                                    } else if (dataSelecionada > hoje) {
+                                        "Agendado: O estado mudará para ENTREGUE na data selecionada"
+                                    } else {
+                                        "Data confirmada: Estado alterado para ENTREGUE"
+                                    }
+
+                                    Text(
+                                        text = mensagem,
+                                        fontSize = 11.sp,
+                                        color = if (dataSelecionada > hoje) IpcaButtonGreen else Color.Gray,
+                                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                                    )
                                 }
                             }
                         }
                     }
                 }
 
-                // Header Produtos
+                // Seção de Produtos
                 item {
                     Row(
                         Modifier.fillMaxWidth(),
@@ -166,7 +189,6 @@ fun EntregaDetalhesView(
                     }
                 }
 
-                // Lista de Produtos
                 items(entrega?.itens ?: emptyList()) { item ->
                     ProdutoItemCard(
                         item = item,
@@ -181,6 +203,7 @@ fun EntregaDetalhesView(
         }
     }
 
+    // Dialogs (Inventário e Avisos)
     if (showProdutoDialog) {
         InventarioDialog(
             produtos = viewModel.produtosComStockAtualizado,
@@ -194,11 +217,11 @@ fun EntregaDetalhesView(
 
     viewModel.avisoStock.value?.let { mensagem ->
         AlertDialog(
-            onDismissRequest = { viewModel.avisoStock.value = null },
+            onDismissRequest = { viewModel.limparAviso() },
             title = { Text("Aviso de Stock") },
             text = { Text(mensagem) },
             confirmButton = {
-                TextButton(onClick = { viewModel.avisoStock.value = null }) {
+                TextButton(onClick = { viewModel.limparAviso() }) {
                     Text("OK")
                 }
             }
