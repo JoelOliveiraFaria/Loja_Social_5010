@@ -17,7 +17,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-
+import android.content.Context
+import androidx.room.Room
+import com.example.lojasocial.local.AppDatabase
+import com.example.lojasocial.local.TrackedPedidoDao
+import com.example.lojasocial.repositories.TrackedPedidoRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
@@ -63,4 +68,26 @@ object AppModule {
     fun provideEntregaRepository(
         repo: EntregaRepositoryFirestore
     ): EntregaRepository = repo
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "lojasocial.db"
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    fun provideTrackedPedidoDao(db: AppDatabase): TrackedPedidoDao =
+        db.trackedPedidoDao()
+
+    @Provides
+    @Singleton
+    fun provideTrackedPedidoRepository(dao: TrackedPedidoDao): TrackedPedidoRepository =
+        TrackedPedidoRepository(dao)
+
 }

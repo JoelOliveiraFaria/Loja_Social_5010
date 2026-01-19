@@ -14,6 +14,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.lojasocial.repositories.TrackedPedidoRepository
 
 enum class PedidosTab {
     NOVOS,
@@ -25,22 +26,63 @@ data class PedidosState(
     val pedidos: List<Pedido> = emptyList(),
     val beneficiarios: Map<String, String> = emptyMap(),
     val error: String? = null,
-    val currentTab: PedidosTab = PedidosTab.NOVOS
+    val currentTab: PedidosTab = PedidosTab.NOVOS,
+    val showOnlyTracked: Boolean = false,
+    val trackedIds: Set<String> = emptySet()
 )
 
 @HiltViewModel
 class PedidosListViewModel @Inject constructor(
     private val pedidoRepository: PedidoRepository,
-    private val beneficiarioRepository: BeneficiarioRepository
+    private val beneficiarioRepository: BeneficiarioRepository,
+    private val trackedPedidoRepository: TrackedPedidoRepository
 ) : ViewModel() {
 
     private val _uiState = mutableStateOf(PedidosState())
     val uiState: State<PedidosState> = _uiState
+    private var pedidosRaw: List<Pedido> = emptyList()
 
     private var currentJob: Job? = null
 
+    fun alternarFiltroTracked() {
+        _uiState.value =
+            _uiState.value.copy(showOnlyTracked = !_uiState.value.showOnlyTracked)
+        aplicarFiltro()
+    }
+
+    fun toggleTracked(pedidoId: String) {
+        viewModelScope.launch {
+            trackedPedidoRepository.toggle(pedidoId)
+        }
+    }
+
+    private fun aplicarFiltro() {
+        val state = _uiState.value
+
+        val filtrados = if (state.showOnlyTracked) {
+            pedidosRaw.filter { it.id in state.trackedIds }
+        } else {
+            pedidosRaw
+        }
+
+        _uiState.value = state.copy(
+            pedidos = filtrados,
+            isLoading = false
+        )
+    }
+
+    private fun observarTracked() {
+        viewModelScope.launch {
+            trackedPedidoRepository.observeTrackedIds().collect { ids ->
+                _uiState.value = _uiState.value.copy(trackedIds = ids)
+                aplicarFiltro()
+            }
+        }
+    }
+
     init {
         mudarTab(PedidosTab.NOVOS)
+        observarTracked()
     }
 
     fun mudarTab(tab: PedidosTab) {
@@ -54,32 +96,24 @@ class PedidosListViewModel @Inject constructor(
 
         currentJob = viewModelScope.launch {
             if (tab == PedidosTab.NOVOS) {
-                // --- TAB 1: APENAS NOVOS ---
                 pedidoRepository.getPedidosPorStatus(PedidoStatus.NOVO)
                     .collect { pedidos ->
                         atualizarEstado(pedidos)
                     }
             } else {
-                // --- TAB 2: HISTÓRICO (Decisões: Aceites ou Recusados) ---
 
-                // 1. ACEITES (Em Andamento) -> Consideramos isto um pedido aceite
                 val flowAceites = pedidoRepository.getPedidosPorStatus(PedidoStatus.EM_ANDAMENTO)
 
-                // 2. RECUSADOS -> Pedidos rejeitados
                 val flowRecusados = pedidoRepository.getPedidosPorStatus(PedidoStatus.RECUSADO)
-
-                // NOTA: Removemos PRONTO e ENTREGUE daqui, pois isso são "Entregas/Logística"
 
                 merge(flowAceites, flowRecusados)
                     .collect { listaParcial ->
-                        // Lógica para acumular e atualizar a lista
+
                         val listaAtual = _uiState.value.pedidos.toMutableList()
 
-                        // Remove duplicados antigos e adiciona novos
                         listaAtual.removeAll { antigo -> listaParcial.any { novo -> novo.id == antigo.id } }
                         listaAtual.addAll(listaParcial)
 
-                        // Ordena por data (mais recente primeiro)
                         val listaOrdenada = listaAtual.sortedByDescending { it.dataCriacao?.seconds ?: 0L }
 
                         atualizarEstado(listaOrdenada)
@@ -89,13 +123,18 @@ class PedidosListViewModel @Inject constructor(
     }
 
     private suspend fun atualizarEstado(pedidos: List<Pedido>) {
-        val nomes = carregarNomesPedidos(pedidos)
+        pedidosRaw = pedidos
+
+        val nomes = carregarNomesPedidos(pedidosRaw)
+
         _uiState.value = _uiState.value.copy(
             isLoading = false,
-            pedidos = pedidos,
             beneficiarios = nomes
         )
+
+        aplicarFiltro()
     }
+
 
     private suspend fun carregarNomesPedidos(pedidos: List<Pedido>): Map<String, String> {
         val nomesMap = _uiState.value.beneficiarios.toMutableMap()

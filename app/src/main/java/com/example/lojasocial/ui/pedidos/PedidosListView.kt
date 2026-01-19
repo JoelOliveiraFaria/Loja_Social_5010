@@ -42,7 +42,6 @@ fun PedidosListView(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // 1. NAVBAR
             TopBarWithMenu(navController = navController)
             Divider(color = Color(0xFF2C6B55))
 
@@ -56,14 +55,12 @@ fun PedidosListView(
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
 
-            // 2. BOTÕES DE FILTRO (TABS)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Botão Novos
                 FilterTabButton(
                     text = "Novos",
                     isSelected = state.currentTab == PedidosTab.NOVOS,
@@ -71,7 +68,6 @@ fun PedidosListView(
                     onClick = { viewModel.mudarTab(PedidosTab.NOVOS) }
                 )
 
-                // Botão Histórico
                 FilterTabButton(
                     text = "Histórico",
                     isSelected = state.currentTab == PedidosTab.HISTORICO,
@@ -80,7 +76,28 @@ fun PedidosListView(
                 )
             }
 
-            // 3. LISTA
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                FilterTabButton(
+                    text = "Todos",
+                    isSelected = !state.showOnlyTracked,
+                    modifier = Modifier.weight(1f),
+                    onClick = { if (state.showOnlyTracked) viewModel.alternarFiltroTracked() }
+                )
+
+                FilterTabButton(
+                    text = "⭐",
+                    isSelected = state.showOnlyTracked,
+                    modifier = Modifier.weight(1f),
+                    onClick = { if (!state.showOnlyTracked) viewModel.alternarFiltroTracked() }
+                )
+            }
+
             if (state.isLoading && state.pedidos.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = WhiteColor)
@@ -88,7 +105,7 @@ fun PedidosListView(
             } else if (state.pedidos.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = if(state.currentTab == PedidosTab.NOVOS) "Não há novos pedidos." else "Histórico vazio.",
+                        text = if (state.currentTab == PedidosTab.NOVOS) "Não há novos pedidos." else "Histórico vazio.",
                         color = WhiteColor.copy(alpha = 0.6f)
                     )
                 }
@@ -98,15 +115,20 @@ fun PedidosListView(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(state.pedidos) { pedido ->
-                        val nomeBeneficiario = state.beneficiarios[pedido.beneficiarioId] ?: "A carregar..."
+                    items(items = state.pedidos) { pedido ->
+                        val pedidoId = pedido.id ?: return@items
+
+                        val nomeBeneficiario =
+                            state.beneficiarios[pedido.beneficiarioId] ?: "A carregar..."
+
+                        val isTracked = state.trackedIds.contains(pedidoId)
 
                         PedidoItemCard(
                             pedido = pedido,
                             beneficiarioNome = nomeBeneficiario,
-                            onClick = {
-                                navController.navigate("pedidos/${pedido.id}")
-                            }
+                            isTracked = isTracked,
+                            onToggleTracked = { viewModel.toggleTracked(pedidoId) },
+                            onClick = { navController.navigate("pedidos/$pedidoId") }
                         )
                     }
                 }
@@ -140,19 +162,51 @@ fun FilterTabButton(
 fun PedidoItemCard(
     pedido: Pedido,
     beneficiarioNome: String,
+    isTracked: Boolean,
+    onToggleTracked: () -> Unit,
     onClick: () -> Unit
 ) {
-    // Cores e Ícones
     val (statusColor, statusBg, statusText, statusIcon) = when (pedido.status) {
-        PedidoStatus.NOVO -> Tuple4(Color(0xFFE65100), Color(0xFFFFF3E0), "NOVO", Icons.Default.AccessTime)
-        PedidoStatus.EM_ANDAMENTO -> Tuple4(Color(0xFF1B5E20), Color(0xFFE8F5E9), "ACEITE", Icons.Default.LocalShipping)
-        PedidoStatus.PRONTO -> Tuple4(Color(0xFF0277BD), Color(0xFFE1F5FE), "PRONTO", Icons.Default.Inventory)
-        PedidoStatus.ENTREGUE -> Tuple4(Color(0xFF424242), Color(0xFFEEEEEE), "ENTREGUE", Icons.Default.DoneAll)
-        PedidoStatus.RECUSADO -> Tuple4(Color(0xFFC62828), Color(0xFFFFEBEE), "RECUSADO", Icons.Default.Cancel)
+        PedidoStatus.NOVO -> Tuple4(
+            Color(0xFFE65100),
+            Color(0xFFFFF3E0),
+            "NOVO",
+            Icons.Default.AccessTime
+        )
+
+        PedidoStatus.EM_ANDAMENTO -> Tuple4(
+            Color(0xFF1B5E20),
+            Color(0xFFE8F5E9),
+            "ACEITE",
+            Icons.Default.LocalShipping
+        )
+
+        PedidoStatus.PRONTO -> Tuple4(
+            Color(0xFF0277BD),
+            Color(0xFFE1F5FE),
+            "PRONTO",
+            Icons.Default.Inventory
+        )
+
+        PedidoStatus.ENTREGUE -> Tuple4(
+            Color(0xFF424242),
+            Color(0xFFEEEEEE),
+            "ENTREGUE",
+            Icons.Default.DoneAll
+        )
+
+        PedidoStatus.RECUSADO -> Tuple4(
+            Color(0xFFC62828),
+            Color(0xFFFFEBEE),
+            "RECUSADO",
+            Icons.Default.Cancel
+        )
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -162,23 +216,48 @@ fun PedidoItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Chip de Estado
                 Surface(color = statusBg, shape = RoundedCornerShape(8.dp)) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = statusIcon, contentDescription = null, tint = statusColor, modifier = Modifier.size(14.dp))
+                        Icon(
+                            imageVector = statusIcon,
+                            contentDescription = null,
+                            tint = statusColor,
+                            modifier = Modifier.size(14.dp)
+                        )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = statusText, color = statusColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = statusText,
+                            color = statusColor,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
-                Text(
-                    text = beneficiarioNome,
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Medium
-                )
+
+                // Nome + ⭐ (Room)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = beneficiarioNome,
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    IconButton(
+                        onClick = onToggleTracked,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isTracked) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = "Seguir pedido",
+                            tint = if (isTracked) Color(0xFFFFC107) else Color.Gray,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -199,12 +278,21 @@ fun PedidoItemCard(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Ver detalhes", fontSize = 12.sp, color = IpcaButtonGreen, fontWeight = FontWeight.Bold)
-                Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = IpcaButtonGreen, modifier = Modifier.size(16.dp))
+                Text(
+                    "Ver detalhes",
+                    fontSize = 12.sp,
+                    color = IpcaButtonGreen,
+                    fontWeight = FontWeight.Bold
+                )
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = IpcaButtonGreen,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
     }
 }
 
-// Classe auxiliar para devolver 4 valores
 private data class Tuple4<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
